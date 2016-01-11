@@ -145,7 +145,15 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Common.cpp" />
+    <ClCompile Include="GrabberNode.cpp" />
+    <ClCompile Include="ProcessingNode.cpp" />
     <ClCompile Include="screenSnd.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="GrabberNode.h" />
+    <ClInclude Include="ProcessingNode.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -21,5 +21,25 @@
     <ClCompile Include="screenSnd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ProcessingNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GrabberNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ProcessingNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GrabberNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
