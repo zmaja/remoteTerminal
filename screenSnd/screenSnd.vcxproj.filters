@@ -30,6 +30,12 @@
     <ClCompile Include="GrabberNode.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="JPEGCompressorNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SocketOutputNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ProcessingNode.h">
@@ -39,6 +45,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GrabberNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="JPEGCompressorNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SocketOutputNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

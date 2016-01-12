@@ -3,7 +3,70 @@
 Message::Message()
 {
     m_ePixelFormat = PF_UNDEF;
+    m_iWidth = -1;
+    m_iHeight = -1;
+    m_iValidBytes = 0;
     p_chPayload = new char[MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT*MAX_BPP >> 3];
+}
+
+void Message::SetWidth(int _iWidth)
+{
+    m_iWidth = _iWidth;
+}
+
+void Message::SetHeight(int _iHeight)
+{
+    m_iHeight = _iHeight;
+}
+
+void Message::SetStartTime(int _iStartTime)
+{
+    m_iStartTime = _iStartTime;
+}
+
+void Message::SetEndTime(int _iEndTime)
+{
+    m_iEndTime = _iEndTime;
+}
+
+void Message::SetValidBytes(int _iValidBytes)
+{
+    m_iValidBytes = _iValidBytes;
+}
+
+int Message::GetWidth()
+{
+    return m_iWidth;
+}
+
+int Message::GetHeight()
+{
+    return m_iHeight;
+}
+
+int Message::GetStartTime()
+{
+    return m_iStartTime;
+}
+
+int Message::GetEndTime()
+{
+    return m_iEndTime;
+}
+
+int Message::GetValidBytes()
+{
+    return m_iValidBytes;
+}
+
+void * Message::GetPayloadAddress()
+{
+    return p_chPayload;
+}
+
+int Message::TotalProcessingTime()
+{
+    return m_iEndTime - m_iStartTime;
 }
 
 Message::~Message()

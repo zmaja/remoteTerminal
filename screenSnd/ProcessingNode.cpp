@@ -1,6 +1,7 @@
-#include "ProcessingNode.h"
 #include <iostream>
 #include <string>
+
+#include "ProcessingNode.h"
 
 ProcessingNode::ProcessingNode(int _iMailboxSize, std::string _sName):m_cMessageQueue(_iMailboxSize)
 {
@@ -15,6 +16,8 @@ ProcessingNode::ProcessingNode(int _iMailboxSize, std::string _sName):m_cMessage
 
 bool ProcessingNode::Init()
 {
+    if (bInitialized)
+        return false;
     m_hSemaphore = CreateSemaphore(
         NULL,                            // default security attributes
         0,                               // initial count
@@ -60,6 +63,8 @@ bool ProcessingNode::Init()
 
 bool ProcessingNode::DeInit()
 {
+    if (!bInitialized)
+        return false;
     if (m_hWorkerThread)
     {
         WaitForSingleObject(m_hWorkerThread, INFINITE);
@@ -95,6 +100,8 @@ ProcessingNode * ProcessingNode::GetNextProcessingNode()
 
 bool ProcessingNode::ReceiveMessage(Message *_pcMessage)
 {
+    if (!bInitialized)
+        return false;
     if (m_cMessageQueue.QueueMessage(_pcMessage))
     {
         if (!ReleaseSemaphore(
@@ -116,6 +123,8 @@ bool ProcessingNode::ReceiveMessage(Message *_pcMessage)
 
 bool ProcessingNode::Stop()
 {
+    if (!bInitialized)
+        return false;
     if (!SetEvent(m_hStopEvent))
     {
         std::cout << m_sName << " Stop: SetEvent failed " + GetLastError() << std::endl;
@@ -126,8 +135,11 @@ bool ProcessingNode::Stop()
 
 void ProcessingNode::ProcessMessage(Message * _pcMessage)
 {
-    std::cout << m_sName << " ProcessMessage: Sleeping ..." << std::endl;
-    Sleep(2000);
+    if (bInitialized)
+    {
+        std::cout << m_sName << " ProcessMessage: Sleeping ..." << std::endl;
+        Sleep(2000);
+    }
 }
 
 std::string ProcessingNode::Name()
@@ -147,13 +159,19 @@ HANDLE ProcessingNode::GetStopEvent()
 
 Message * ProcessingNode::ConsumeMessage()
 {
-    Message *pcMessage = m_cMessageQueue.DequeueMessage();
-    if (pcMessage != NULL)
+    if (bInitialized)
     {
-        return pcMessage;
+        Message *pcMessage = m_cMessageQueue.DequeueMessage();
+        if (pcMessage != NULL)
+        {
+            return pcMessage;
+        }
+        else {
+            std::cout << m_sName << " ConsumeMessage: MessageQueue is empty. This shouldn't happen" << std::endl;
+            return NULL;
+        }
     }
     else {
-        std::cout << m_sName << " ConsumeMessage: MessageQueue is empty. This shouldn't happen" << std::endl;
         return NULL;
     }
 }
@@ -173,21 +191,27 @@ DWORD WINAPI ProcessingNode::ThreadProc(LPVOID lpParam)
     {
         DWORD dwEvent;
         HANDLE hEvents[2];
-        hEvents[0] = pcProcessingNode->GetMessageQueueSemaphore();
-        hEvents[1] = pcProcessingNode->GetStopEvent();
+        hEvents[0] = pcProcessingNode->GetStopEvent();
+        hEvents[1] = pcProcessingNode->GetMessageQueueSemaphore();
 
         dwEvent = WaitForMultipleObjects(
             2,           // number of objects in array
             hEvents,     // array of objects
             FALSE,       // wait for any object
-            INFINITE);   // five-second wait
+            INFINITE);   // blocking wait
 
         // The return value indicates which event is signaled
 
         switch (dwEvent)
         {
-            // hEvents[0] was signaled (MessageQueue semaphore)
+            // hEvents[0] was signaled (Stop event signalled)
         case WAIT_OBJECT_0 + 0:
+            //std::cout << pcProcessingNode->Name() << " ThreadProc: Received stop" << std::endl;
+            return 0;
+            break;
+
+            // hEvents[1] was signaled (MessageQueue semaphore)
+        case WAIT_OBJECT_0 + 1:
         {
             std::cout << pcProcessingNode->Name() << " ThreadProc: Received message" << std::endl;
             Message *pcMessage = pcProcessingNode->ConsumeMessage();
@@ -201,11 +225,6 @@ DWORD WINAPI ProcessingNode::ThreadProc(LPVOID lpParam)
             }
             break;
         }
-            // hEvents[1] was signaled (Stop event signalled)
-        case WAIT_OBJECT_0 + 1:
-            std::cout << pcProcessingNode->Name() << " ThreadProc: Received stop" << std::endl;
-            return 0;
-            break;
 
         case WAIT_TIMEOUT:
             std::cout << pcProcessingNode->Name() << " ThreadProc: Wait timeout" << std::endl;

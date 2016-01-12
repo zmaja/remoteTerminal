@@ -2,40 +2,47 @@
 //
 
 #include <stdio.h>
+#include <conio.h>
 
+#include "ProcessingNode.h"
 #include "GrabberNode.h"
+#include "JPEGCompressorNode.h"
+#include "SocketOutputNode.h"
 
 int main() {
 
-    GrabberNode cGN (10, "GN1");
-    GrabberNode cGN2(10, "GN2");
-    ProcessingNode cPN(10, "PN");
+    GrabberNode cGN (10, "GN");
+    JPEGCompressorNode cPN(10, "PN", 30, true);
+    SocketOutputNode cSN(10, "SN", "192.168.178.33", 10000);
 
-    cGN.SetNextProcessingNode(&cGN2);
-    cGN2.SetNextProcessingNode(&cPN);
-    cPN.SetNextProcessingNode(&cGN);
+    cGN.SetNextProcessingNode(&cPN);
+    cPN.SetNextProcessingNode(&cSN);
+    cSN.SetNextProcessingNode(&cGN);
 
     cGN.Init();
-    cGN2.Init();
     cPN.Init();
+    cSN.Init();
     
-    Sleep(2000);
+    Sleep(1000);
 
-    Message *pcMessage = new Message[1];
+    Message *pcMessage = new Message[10];
 
     cGN.ReceiveMessage(&pcMessage[0]);
     cGN.ReceiveMessage(&pcMessage[1]);
     cGN.ReceiveMessage(&pcMessage[2]);
+    //cGN.ReceiveMessage(&pcMessage[3]);
 
-    Sleep(10000);
+    while (!_kbhit()) {
+        Sleep(300);
+    }
 
     cGN.Stop();
-    cGN2.Stop();
     cPN.Stop();
+    cSN.Stop();
 
     cGN.DeInit();
-    cGN2.DeInit();
     cPN.DeInit();
+    cSN.DeInit();
 
     delete [] pcMessage;
     

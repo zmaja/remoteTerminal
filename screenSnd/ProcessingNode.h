@@ -24,7 +24,7 @@ public:
     ProcessingNode *GetNextProcessingNode();
     bool ReceiveMessage(Message *_pcMessage);
     bool Stop();
-    void ProcessMessage(Message *_pcMessage);
+    virtual void ProcessMessage(Message *_pcMessage);
 
     std::string Name();
     HANDLE GetMessageQueueSemaphore();

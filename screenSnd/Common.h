@@ -12,9 +12,26 @@ enum ePixelFormat { PF_UNDEF, PF_ARGB, PF_JPEG };
 class Message {
 private:
     ePixelFormat m_ePixelFormat;
+    int m_iWidth;
+    int m_iHeight;
+    int m_iStartTime;
+    int m_iEndTime;
     char *p_chPayload;
+    int m_iValidBytes;
 public:
     Message();
+    void SetWidth(int _iWidth);
+    void SetHeight(int _iHeight);
+    void SetStartTime(int _iStartTime);
+    void SetEndTime(int _iEndTime);
+    void SetValidBytes(int _iValidBytes);
+    int GetWidth();
+    int GetHeight();
+    int GetStartTime();
+    int GetEndTime();
+    int GetValidBytes();
+    void *GetPayloadAddress();
+    int TotalProcessingTime();
     ~Message();
 };
 
