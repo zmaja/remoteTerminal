@@ -12,7 +12,7 @@ int main() {
 
     GrabberNode cGN (10, "GN");
     JPEGCompressorNode cPN(10, "PN", 30, true);
-    SocketOutputNode cSN(10, "SN", "192.168.178.33", 10000);
+    SocketOutputNode cSN(10, "SN", "127.0.0.1", 10000);
 
     cGN.SetNextProcessingNode(&cPN);
     cPN.SetNextProcessingNode(&cSN);

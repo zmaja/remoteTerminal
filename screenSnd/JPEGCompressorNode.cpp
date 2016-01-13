@@ -253,6 +253,9 @@ void JPEGCompressorNode::ProcessMessage(Message * _pcMessage)
     if (m_bSaveToFile) {
         char sFileName[100];
         sprintf(sFileName, "Frame%d.jpg", iCnt++);
+        if (iCnt >= 100) {
+            iCnt = 0;
+        }
         FILE *hOutFile = fopen(sFileName, "wb");
         if (hOutFile == NULL) return;
         fwrite(m_pcStorage, 1, m_iValidBytes, hOutFile);
