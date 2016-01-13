@@ -78,7 +78,7 @@ void GrabberNode::ProcessMessage(Message * _pcMessage)
             _pcMessage->SetHeight(m_iScreenHeight);
             _pcMessage->SetValidBytes(m_iScreenWidth * m_iScreenHeight * 3);
             BitBlt(m_hCaptureDC, 0, 0, m_iScreenWidth, m_iScreenHeight,
-                m_hDesktopDC, 0, 0, SRCCOPY | CAPTUREBLT);
+                m_hDesktopDC, 0, 0, SRCCOPY);
             GetDIBits(m_hCaptureDC, m_hCaptureBitmap, 0, m_iScreenHeight,
                 _pcMessage->GetPayloadAddress(), (BITMAPINFO*)&m_bmi, DIB_RGB_COLORS);
             int end = GetTickCount();

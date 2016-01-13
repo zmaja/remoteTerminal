@@ -41,8 +41,8 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 int main()
 {
     GrabberNode *cGN = new GrabberNode(10, "GN");
-    JPEGCompressorNode *cPN = new JPEGCompressorNode(10, "PN", 30, false);
-    SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "192.168.0.3", 8888);
+    JPEGCompressorNode *cPN = new JPEGCompressorNode(10, "PN", 30, true);
+    SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "127.0.0.1", 8888);
 
     cGN->SetNextProcessingNode(cPN);
     cPN->SetNextProcessingNode(cSN);
