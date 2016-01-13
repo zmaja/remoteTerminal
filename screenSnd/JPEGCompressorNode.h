@@ -10,7 +10,7 @@ protected:
 
     int m_iQuality;
     int m_iValidBytes;
-    char * m_pcStorage;
+    char *m_pcStorage;
 
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;

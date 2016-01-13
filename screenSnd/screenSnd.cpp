@@ -7,41 +7,86 @@
 #include "GrabberNode.h"
 #include "JPEGCompressorNode.h"
 #include "SocketOutputNode.h"
+#include "screenSnd.h"
 
-int main() {
+char szClassName[] = "WindowsApp";
 
-    GrabberNode cGN (10, "GN");
-    JPEGCompressorNode cPN(10, "PN", 30, true);
-    SocketOutputNode cSN(10, "SN", "127.0.0.1", 10000);
+GrabberNode *cGN;
+JPEGCompressorNode *cPN;
+SocketOutputNode *cSN;
 
-    cGN.SetNextProcessingNode(&cPN);
-    cPN.SetNextProcessingNode(&cSN);
-    cSN.SetNextProcessingNode(&cGN);
+LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    GrabberNode *cGN = (GrabberNode*)GetWindowLongPtr(hwnd, GWL_USERDATA);
+    switch (message)
+    {
+    case WM_KEYDOWN:
+        PostQuitMessage(0);
+        break;
+    case WM_DISPLAYCHANGE:
+        cGN->DisplayResolutionChanged();
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    case WM_NCCREATE:
+        SetWindowLongPtr(hwnd, GWL_USERDATA, (LONG_PTR)((CREATESTRUCT*)lParam)->lpCreateParams);
+        SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
+    default:
+        return DefWindowProc(hwnd, message, wParam, lParam);
+    }
+    return 0;
+}
 
-    cGN.Init();
-    cPN.Init();
-    cSN.Init();
-    
+int main()
+{
+    GrabberNode *cGN = new GrabberNode(10, "GN");
+    JPEGCompressorNode *cPN = new JPEGCompressorNode(10, "PN", 30, false);
+    SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "192.168.0.3", 8888);
+
+    cGN->SetNextProcessingNode(cPN);
+    cPN->SetNextProcessingNode(cSN);
+    cSN->SetNextProcessingNode(cGN);
+
+    cGN->Init();
+    cPN->Init();
+    cSN->Init();
+
     Message *pcMessage = new Message[10];
 
-    cGN.ReceiveMessage(&pcMessage[0]);
-    cGN.ReceiveMessage(&pcMessage[1]);
-    cGN.ReceiveMessage(&pcMessage[2]);
-    //cGN.ReceiveMessage(&pcMessage[3]);
+    cGN->ReceiveMessage(&pcMessage[0]);
+    cGN->ReceiveMessage(&pcMessage[1]);
+    cGN->ReceiveMessage(&pcMessage[2]);
+    //cGN->ReceiveMessage(&pcMessage[3]);
 
-    while (!_kbhit()) {
-        Sleep(300);
+    WNDCLASSEX wc = { sizeof(WNDCLASSEX),0,WindowProcedure,0,0,GetModuleHandle(NULL),NULL,NULL,0,NULL,szClassName,NULL };
+    if (!RegisterClassEx(&wc))
+    {
+        return 0;
     }
 
-    cGN.Stop();
-    cPN.Stop();
-    cSN.Stop();
+    CreateWindowEx(0, szClassName, 0, WS_OVERLAPPEDWINDOW, 0, 0, 0, 0, HWND_DESKTOP, NULL, GetModuleHandle(NULL), cGN);
 
-    cGN.DeInit();
-    cPN.DeInit();
-    cSN.DeInit();
+    MSG messages;
+    while (GetMessage(&messages, NULL, 0, 0))
+    {
+        TranslateMessage(&messages);
+        DispatchMessage(&messages);
+    }
+
+    cGN->Stop();
+    cPN->Stop();
+    cSN->Stop();
+
+    cGN->DeInit();
+    cPN->DeInit();
+    cSN->DeInit();
 
     delete[] pcMessage;
+
+    delete cGN;
+    delete cSN;
+    delete cPN;
     
     return 0; 
 }

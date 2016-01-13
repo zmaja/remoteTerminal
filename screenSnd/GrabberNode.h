@@ -10,9 +10,12 @@ protected:
     HDC m_hCaptureDC;
     HBITMAP m_hCaptureBitmap;
     BITMAPINFOHEADER m_bmi;
+
+    HANDLE m_hMutex;
 public:
     GrabberNode(int _iMailboxSize, std::string _sName);
     bool Init();
     bool DeInit();
     void ProcessMessage(Message *_pcMessage);
+    void DisplayResolutionChanged();
 };
