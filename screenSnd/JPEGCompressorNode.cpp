@@ -217,7 +217,7 @@ bool JPEGCompressorNode::DeInit()
 
 void JPEGCompressorNode::ProcessMessage(Message * _pcMessage)
 {
-    std::cout << m_sName << " ProcessMessage: ProcessMessage ..." << std::endl;
+    //std::cout << m_sName << " ProcessMessage: ProcessMessage ..." << std::endl;
 
     int start = GetTickCount();
     
@@ -230,9 +230,16 @@ void JPEGCompressorNode::ProcessMessage(Message * _pcMessage)
     cinfo.image_height = iHeight;
     jpeg_start_compress(&cinfo, TRUE);
 
+    char pchReorderBuffer[MAX_IMAGE_WIDTH * 3];
+    row_pointer[0] = (JSAMPROW)pchReorderBuffer;// &pchPayloadAddress[posy*iWidth * 3];
     for (int posy = 0; posy < iHeight; posy++)
     {
-        row_pointer[0] = (JSAMPROW)&pchPayloadAddress[posy*iWidth * 3];
+        for (int posx = 0; posx < iWidth; posx++)
+        {
+            pchReorderBuffer[posx * 3 + 0] = pchPayloadAddress[posy*iWidth * 3 + posx * 3 + 2];
+            pchReorderBuffer[posx * 3 + 1] = pchPayloadAddress[posy*iWidth * 3 + posx * 3 + 1];
+            pchReorderBuffer[posx * 3 + 2] = pchPayloadAddress[posy*iWidth * 3 + posx * 3 + 0];
+        }
         jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
     jpeg_finish_compress(&cinfo);

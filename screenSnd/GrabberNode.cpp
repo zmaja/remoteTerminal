@@ -46,7 +46,7 @@ bool GrabberNode::DeInit()
 
 void GrabberNode::ProcessMessage(Message * _pcMessage)
 {
-    std::cout << m_sName << " ProcessMessage: ProcessMessage ..." << std::endl;
+    //std::cout << m_sName << " ProcessMessage: ProcessMessage ..." << std::endl;
     int start = GetTickCount();
     _pcMessage->SetStartTime(GetTickCount());
     _pcMessage->SetEndTime(-1);

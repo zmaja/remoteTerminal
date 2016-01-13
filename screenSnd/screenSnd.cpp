@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <conio.h>
 
-#include "ProcessingNode.h"
 #include "GrabberNode.h"
 #include "JPEGCompressorNode.h"
 #include "SocketOutputNode.h"
@@ -23,8 +22,6 @@ int main() {
     cPN.Init();
     cSN.Init();
     
-    Sleep(1000);
-
     Message *pcMessage = new Message[10];
 
     cGN.ReceiveMessage(&pcMessage[0]);
@@ -44,7 +41,7 @@ int main() {
     cPN.DeInit();
     cSN.DeInit();
 
-    delete [] pcMessage;
+    delete[] pcMessage;
     
     return 0; 
 }

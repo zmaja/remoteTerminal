@@ -213,7 +213,7 @@ DWORD WINAPI ProcessingNode::ThreadProc(LPVOID lpParam)
             // hEvents[1] was signaled (MessageQueue semaphore)
         case WAIT_OBJECT_0 + 1:
         {
-            std::cout << pcProcessingNode->Name() << " ThreadProc: Received message" << std::endl;
+            //std::cout << pcProcessingNode->Name() << " ThreadProc: Received message" << std::endl;
             Message *pcMessage = pcProcessingNode->ConsumeMessage();
             if (pcMessage != NULL)
             {
