@@ -207,7 +207,7 @@ DWORD WINAPI ProcessingNode::ThreadProc(LPVOID lpParam)
             // hEvents[0] was signaled (Stop event signalled)
         case WAIT_OBJECT_0 + 0:
             //std::cout << pcProcessingNode->Name() << " ThreadProc: Received stop" << std::endl;
-            return 0;
+            bContinue = false;
             break;
 
             // hEvents[1] was signaled (MessageQueue semaphore)

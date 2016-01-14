@@ -16,7 +16,7 @@ private:
     int m_iHeight;
     int m_iStartTime;
     int m_iEndTime;
-    char *p_chPayload;
+    char *m_pchPayload;
     int m_iValidBytes;
 public:
     Message();

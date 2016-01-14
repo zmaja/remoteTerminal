@@ -6,7 +6,7 @@ Message::Message()
     m_iWidth = -1;
     m_iHeight = -1;
     m_iValidBytes = 0;
-    p_chPayload = new char[MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT*MAX_BPP >> 3];
+    m_pchPayload = new char[MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT*MAX_BPP >> 3];
 }
 
 void Message::SetWidth(int _iWidth)
@@ -61,7 +61,7 @@ int Message::GetValidBytes()
 
 void * Message::GetPayloadAddress()
 {
-    return p_chPayload;
+    return m_pchPayload;
 }
 
 int Message::TotalProcessingTime()
@@ -72,7 +72,7 @@ int Message::TotalProcessingTime()
 Message::~Message()
 {
     m_ePixelFormat = PF_UNDEF;
-    delete[] p_chPayload;
+    delete[] m_pchPayload;
 }
 
 MessageQueue::MessageQueue(int _iMailboxSize)
