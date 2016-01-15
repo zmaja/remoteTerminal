@@ -1,17 +1,23 @@
+#include <winsock2.h>
+
 #include <iostream>
 
+#include "Common.h"
 #include "SocketReceiverNode.h"
 
-SocketReceiverNode::SocketReceiverNode(int _iMailboxSize, std::string _sName, int _iPort)
+SocketReceiverNode::SocketReceiverNode(std::string _sName, int _iPort)
 {
     m_sName = _sName;
 
     m_hStopEvent = NULL;
     m_hWorkerThread = NULL;
 
+	m_iMaxMsgSize = 0;
     m_iPort = _iPort;
 
     SOCKET ReceiveSocket = INVALID_SOCKET;
+
+	SenderAddrSize = sizeof(SenderAddr);
 
     m_bInitialized = false;
 }
@@ -26,7 +32,7 @@ bool SocketReceiverNode::Init()
     int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != NO_ERROR)
     {
-        std::cout << m_sName << " Init: WSAStartup failed with error: " << iResult << std::endl;
+		DEBUG_MSG(m_sName << " Init: WSAStartup failed with error: " << iResult);
         return false;
     }
 
@@ -35,7 +41,7 @@ bool SocketReceiverNode::Init()
     ReceiveSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (ReceiveSocket == INVALID_SOCKET)
     {
-        std::cout << m_sName << " Init: socket failed with error: " << WSAGetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " Init: socket failed with error: " << WSAGetLastError());
         WSACleanup();
         return false;
     }
@@ -52,11 +58,26 @@ bool SocketReceiverNode::Init()
     // Bind the socket.
     iResult = bind(ReceiveSocket, (SOCKADDR *)&myAddr, sizeof(myAddr));
     if (iResult == SOCKET_ERROR) {
-        std::cout << m_sName << " Init: bind failed with error: " << WSAGetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " Init: bind failed with error: " << WSAGetLastError());
         closesocket(ReceiveSocket);
         WSACleanup();
         return false;
     }
+
+	int iOptVal;
+	int iOptLen = sizeof(int);
+
+	if (getsockopt(ReceiveSocket, SOL_SOCKET, SO_MAX_MSG_SIZE, (char*)&iOptVal, &iOptLen) != SOCKET_ERROR)
+	{
+		m_iMaxMsgSize = iOptVal;
+	}
+	else
+	{
+		DEBUG_MSG(m_sName << " Init: getsockopt failed with error: " << WSAGetLastError());
+		closesocket(ReceiveSocket);
+		WSACleanup();
+		return false;
+	}
 
     m_hStopEvent = CreateEvent(
         NULL,               // default security attributes
@@ -66,7 +87,9 @@ bool SocketReceiverNode::Init()
         );
     if (m_hStopEvent == NULL)
     {
-        std::cout << m_sName << " Init: CreateEvent error" << std::endl;
+		DEBUG_MSG(m_sName << " Init: CreateEvent error");
+		closesocket(ReceiveSocket);
+		WSACleanup();
         return false;
     }
 
@@ -79,8 +102,10 @@ bool SocketReceiverNode::Init()
         0); // receive thread identifier
     if (m_hWorkerThread == NULL)
     {
-        std::cout << m_sName << " Init: CreateThread error" << std::endl;
+		DEBUG_MSG(m_sName << " Init: CreateThread error");
         CloseHandle(m_hStopEvent);
+		closesocket(ReceiveSocket);
+		WSACleanup();
         return false;
     }
 
@@ -117,7 +142,7 @@ bool SocketReceiverNode::Stop()
         return false;
     if (!SetEvent(m_hStopEvent))
     {
-        std::cout << m_sName << " Stop: SetEvent failed " + GetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " Stop: SetEvent failed " + GetLastError());
         return false;
     }
     return true;
@@ -252,10 +277,10 @@ void SocketReceiverNode::GenerateRightMouseClickEvent(int _iXpos, int _iYpos, in
     GenerateRightMouseReleaseEvent();
 }
 
-int SocketReceiverNode::recv_timeout(SOCKET s, char *buf, int len, int flags, int timeout)
+int SocketReceiverNode::recvfrom_timeout(SOCKET s, char *buf, int len, int flags, int timeout)
 {
     struct timeval timeout_value;
-    timeout_value.tv_usec = timeout;
+    timeout_value.tv_usec = timeout*1000;
     fd_set readFDs;
 
     FD_ZERO(&readFDs);
@@ -271,13 +296,123 @@ int SocketReceiverNode::recv_timeout(SOCKET s, char *buf, int len, int flags, in
     }
     else
     {
-        return recv(s, buf, len, flags);
+        return recvfrom(s, buf, len, flags, (SOCKADDR *)& SenderAddr, &SenderAddrSize);
     }
 }
 
+
+
 void SocketReceiverNode::CheckSocketForIncommingMessages()
 {
+	//DEBUG_MSG(m_sName << " CheckSocketForIncommingMessages: Entered");
+	char *pchRecvBuffer = new char[m_iMaxMsgSize];
+	int iRet = recvfrom_timeout(ReceiveSocket, pchRecvBuffer, m_iMaxMsgSize, 0, 500); //wait on recvfrom for 100ms
 
+	if (iRet > 0)
+	{
+		DEBUG_MSG(m_sName << " CheckSocketForIncommingMessages: Got something");
+		ProcessReceivedMessage(pchRecvBuffer, iRet);
+	}
+
+	delete[]pchRecvBuffer;
+}
+
+void SocketReceiverNode::ProcessKeyboardEvent(tKeyboardEvent *_psKeyboardEvent)
+{
+	DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received keyboard event");
+	if (_psKeyboardEvent->identificator != MSG_KEYBOARD)
+	{
+		DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad keyboard event");
+	}
+	else {
+		switch (_psKeyboardEvent->pressed)
+		{
+		case 0:
+			GenerateKeyReleaseEvent(_psKeyboardEvent->virtual_key_code);
+			break;
+		case 1:
+			GenerateKeyPressEvent(_psKeyboardEvent->virtual_key_code);
+			break;
+		default:
+			DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad keyboard press event");
+			break;
+		}
+	}
+}
+
+void SocketReceiverNode::ProcessMouseEvent(tMouseEvent *_psMouseEvent) {
+	DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received mouse event");
+	int iScreenWidth = 0;
+	int iScreenHeight = 0;
+	if (_psMouseEvent->identificator != MSG_MOUSE)
+	{
+		DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad mouse event");
+	}
+	else {
+		switch (_psMouseEvent->event)
+		{
+		case MOUSE_LEFT:
+			switch (_psMouseEvent->pressed)
+			{
+			case 0:
+				GenerateLeftMouseReleaseEvent();
+				break;
+			case 1:
+				GenerateLeftMousePressEvent();
+				break;
+			default:
+				DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad left mouse event");
+				break;
+			}
+			break;
+		case MOUSE_RIGHT:
+			switch (_psMouseEvent->pressed)
+			{
+			case 0:
+				GenerateRightMouseReleaseEvent();
+				break;
+			case 1:
+				GenerateRightMousePressEvent();
+				break;
+			default:
+				DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad right mouse event");
+				break;
+			}
+			break;
+		case MOUSE_MOVE:
+			iScreenWidth = GetSystemMetrics(SM_CXSCREEN);
+			iScreenHeight = GetSystemMetrics(SM_CYSCREEN);
+			if ((_psMouseEvent->pos.x > iScreenWidth) || (_psMouseEvent->pos.y > iScreenHeight))
+			{
+				DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad mouse move event");
+			}
+			else {
+				GenerateMouseMoveEvent(_psMouseEvent->pos.x, _psMouseEvent->pos.y, iScreenWidth, iScreenHeight);
+			}
+			break;
+		default:
+			DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad mouse event");
+			break;
+		}
+	}
+}
+
+void SocketReceiverNode::ProcessReceivedMessage(char *_pcIncommingMessage, int _iSize)
+{
+	switch (_iSize)
+	{
+	case sizeof(tKeyboardEvent) :
+		ProcessKeyboardEvent((tKeyboardEvent *)_pcIncommingMessage);
+		break;
+
+	case sizeof(tMouseEvent) :
+		ProcessMouseEvent((tMouseEvent *)_pcIncommingMessage);
+		break;
+
+	default:
+		DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received unknown message: ");
+		break;
+	}
 }
 
 
@@ -286,9 +421,9 @@ DWORD WINAPI SocketReceiverNode::ThreadProc(LPVOID lpParam)
     SocketReceiverNode *pcSocketReceiverNode = (SocketReceiverNode *)lpParam;
     if (pcSocketReceiverNode == NULL)
     {
-        std::cout << pcSocketReceiverNode->Name() << " ThreadProc: pcSocketReceiverNode == NULL" << std::endl;
+		DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: pcSocketReceiverNode == NULL");
     }
-    std::cout << pcSocketReceiverNode->Name() << " ThreadProc: Entered" << std::endl;
+	DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Entered");
 
     bool bContinue = true;
 
@@ -302,22 +437,22 @@ DWORD WINAPI SocketReceiverNode::ThreadProc(LPVOID lpParam)
         {
             // Stop event signalled
         case WAIT_OBJECT_0:
-            std::cout << pcSocketReceiverNode->Name() << " ThreadProc: Received stop" << std::endl;
+			DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Received stop");
             bContinue = false;
             break;
 
             // hEvents[1] was signaled (MessageQueue semaphore)
         case WAIT_TIMEOUT:
-            std::cout << pcSocketReceiverNode->Name() << " ThreadProc: Wait timeout" << std::endl;
+			//DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Wait timeout");
             break;
 
             // Return value is invalid.
         default:
-            std::cout << pcSocketReceiverNode->Name() << " ThreadProc: Wait error: " + GetLastError() << std::endl;
+			DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Wait error: " + GetLastError());
             ExitProcess(0);
         }
 
-        //CheckSocketForIncommingMessages();
+		pcSocketReceiverNode->CheckSocketForIncommingMessages();
     };
 
     return 0;

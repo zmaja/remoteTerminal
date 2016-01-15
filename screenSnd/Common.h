@@ -1,6 +1,7 @@
 #pragma once
 
 #include <queue>
+#include <iostream>
 
 #ifndef NDEBUG
 #define DEBUG_MSG(str) do { std::cout << str << std::endl; } while( false )
@@ -51,3 +52,29 @@ public:
     Message* DequeueMessage();
     int MailboxSize();
 };
+
+enum MessageIdentificator { MSG_FRAME = 2, MSG_KEYBOARD, MSG_MOUSE };
+enum MouseEventType { MOUSE_LEFT = 1, MOUSE_RIGHT, MOUSE_MOVE };
+
+typedef struct _tPosition
+{
+	short x;
+	char y;
+} tPosition;
+
+typedef struct _tKeyboardEvent
+{
+	MessageIdentificator identificator;
+	char pressed;
+	char virtual_key_code;
+} tKeyboardEvent;
+
+typedef struct _tMouseEvent
+{
+	MessageIdentificator identificator;
+	MouseEventType event;
+	union {
+		tPosition pos;
+		char pressed;
+	};
+} tMouseEvent;

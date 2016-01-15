@@ -7,6 +7,7 @@
 #include "GrabberNode.h"
 #include "JPEGCompressorNode.h"
 #include "SocketOutputNode.h"
+#include "SocketReceiverNode.h"
 #include "screenSnd.h"
 
 char szClassName[] = "WindowsApp";
@@ -40,6 +41,9 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 
 int main()
 {
+	SocketReceiverNode *cSR = new SocketReceiverNode("SR", 8889);
+	cSR->Init();
+
     GrabberNode *cGN = new GrabberNode(10, "GN");
     JPEGCompressorNode *cPN = new JPEGCompressorNode(10, "PN", 30, false);
     SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "127.0.0.1", 8888);
@@ -87,6 +91,11 @@ int main()
     delete cGN;
     delete cSN;
     delete cPN;
+
+
+	cSR->Stop();
+	cSR->DeInit();
+	delete cSR;
     
     return 0; 
 }
