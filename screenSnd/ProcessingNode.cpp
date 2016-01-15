@@ -1,5 +1,4 @@
 #include <iostream>
-#include <string>
 
 #include "ProcessingNode.h"
 
@@ -11,12 +10,12 @@ ProcessingNode::ProcessingNode(int _iMailboxSize, std::string _sName):m_cMessage
     m_hStopEvent = NULL;
     m_hWorkerThread = NULL;
 
-    bInitialized = false;
+    m_bInitialized = false;
 }
 
 bool ProcessingNode::Init()
 {
-    if (bInitialized)
+    if (m_bInitialized)
         return false;
     m_hSemaphore = CreateSemaphore(
         NULL,                            // default security attributes
@@ -56,14 +55,14 @@ bool ProcessingNode::Init()
         return false;
     }
 
-    bInitialized = true;
+    m_bInitialized = true;
 
     return true;
 }
 
 bool ProcessingNode::DeInit()
 {
-    if (!bInitialized)
+    if (!m_bInitialized)
         return false;
     if (m_hWorkerThread)
     {
@@ -83,7 +82,7 @@ bool ProcessingNode::DeInit()
     m_hStopEvent = NULL;
     m_hWorkerThread = NULL;
 
-    bInitialized = false;
+    m_bInitialized = false;
 
     return true;
 }
@@ -100,7 +99,7 @@ ProcessingNode * ProcessingNode::GetNextProcessingNode()
 
 bool ProcessingNode::ReceiveMessage(Message *_pcMessage)
 {
-    if (!bInitialized)
+    if (!m_bInitialized)
         return false;
     if (m_cMessageQueue.QueueMessage(_pcMessage))
     {
@@ -123,7 +122,7 @@ bool ProcessingNode::ReceiveMessage(Message *_pcMessage)
 
 bool ProcessingNode::Stop()
 {
-    if (!bInitialized)
+    if (!m_bInitialized)
         return false;
     if (!SetEvent(m_hStopEvent))
     {
@@ -135,7 +134,7 @@ bool ProcessingNode::Stop()
 
 void ProcessingNode::ProcessMessage(Message * _pcMessage)
 {
-    if (bInitialized)
+    if (m_bInitialized)
     {
         std::cout << m_sName << " ProcessMessage: Sleeping ..." << std::endl;
         Sleep(2000);
@@ -159,7 +158,7 @@ HANDLE ProcessingNode::GetStopEvent()
 
 Message * ProcessingNode::ConsumeMessage()
 {
-    if (bInitialized)
+    if (m_bInitialized)
     {
         Message *pcMessage = m_cMessageQueue.DequeueMessage();
         if (pcMessage != NULL)
@@ -187,13 +186,13 @@ DWORD WINAPI ProcessingNode::ThreadProc(LPVOID lpParam)
 
     bool bContinue = true;
 
+    DWORD dwEvent;
+    HANDLE hEvents[2];
+    hEvents[0] = pcProcessingNode->GetStopEvent();
+    hEvents[1] = pcProcessingNode->GetMessageQueueSemaphore();
+
     while (bContinue)
     {
-        DWORD dwEvent;
-        HANDLE hEvents[2];
-        hEvents[0] = pcProcessingNode->GetStopEvent();
-        hEvents[1] = pcProcessingNode->GetMessageQueueSemaphore();
-
         dwEvent = WaitForMultipleObjects(
             2,           // number of objects in array
             hEvents,     // array of objects

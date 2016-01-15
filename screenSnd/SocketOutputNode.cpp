@@ -83,10 +83,13 @@ bool SocketOutputNode::DeInit()
 }
 
 #define FRAME 2
+int iGlobal = 0;
 void SocketOutputNode::ProcessMessage(Message * _pcMessage)
 {
     //std::cout << m_sName << " ProcessMessage: ProcessMessage ..." << std::endl;
-
+    int tmp2 = m_iMaxMsgSize;
+    m_iMaxMsgSize = m_iMaxMsgSize - iGlobal%20 - 100;
+    iGlobal+=3;
     int start = GetTickCount();
 
     int iResult;
@@ -94,20 +97,24 @@ void SocketOutputNode::ProcessMessage(Message * _pcMessage)
     char *pchPayloadAddress = (char *)_pcMessage->GetPayloadAddress();
 
     int iMessageType = FRAME;
+    char tmpsend[16];
+    memset(tmpsend, 0, 16);
+    int* tmp = (int *)&tmpsend[0];
+    *tmp = FRAME;
     iResult = sendto(SendSocket,
-        (const char *)&iMessageType, 4, 0, (SOCKADDR *)& RecvAddr, sizeof(RecvAddr));
+        (const char *)tmpsend, 16, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR)
     {
         std::cout << m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError() << std::endl;
     }
     iResult = sendto(SendSocket,
-        (const char *)&m_iMaxMsgSize, 4, 0, (SOCKADDR *)& RecvAddr, sizeof(RecvAddr));
+        (const char *)&m_iMaxMsgSize, 4, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR)
     {
         std::cout << m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError() << std::endl;
     }
     iResult = sendto(SendSocket,
-        (const char *)&iPayloadSize, 4, 0, (SOCKADDR *)& RecvAddr, sizeof(RecvAddr));
+        (const char *)&iPayloadSize, 4, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR)
     {
         std::cout << m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError() << std::endl;
@@ -117,7 +124,7 @@ void SocketOutputNode::ProcessMessage(Message * _pcMessage)
         while (iPayloadSize > m_iMaxMsgSize)
         {
             iResult = sendto(SendSocket,
-                (const char *)pchPayloadAddress, m_iMaxMsgSize, 0, (SOCKADDR *)& RecvAddr, sizeof(RecvAddr));
+                (const char *)pchPayloadAddress, m_iMaxMsgSize, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
             if (iResult == SOCKET_ERROR)
             {
                 std::cout << m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError() << std::endl;
@@ -128,7 +135,7 @@ void SocketOutputNode::ProcessMessage(Message * _pcMessage)
 
     }
     iResult = sendto(SendSocket,
-        (const char *)pchPayloadAddress, iPayloadSize, 0, (SOCKADDR *)& RecvAddr, sizeof(RecvAddr));
+        (const char *)pchPayloadAddress, iPayloadSize, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR)
     {
         std::cout << m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError() << std::endl;
@@ -141,5 +148,6 @@ void SocketOutputNode::ProcessMessage(Message * _pcMessage)
 
     std::cout << m_sName << " ProcessMessage: TotalProcessingTime: " << _pcMessage->TotalProcessingTime() << "ms" << std::endl;
 
-    //Sleep(1000);
+    //Sleep(200);
+    m_iMaxMsgSize = tmp2;
 }

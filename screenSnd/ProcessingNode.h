@@ -2,6 +2,7 @@
 
 #include "Common.h"
 #include <windows.h>
+#include <string>
 
 class ProcessingNode {
 protected:
@@ -11,7 +12,7 @@ protected:
     HANDLE m_hSemaphore;
     HANDLE m_hStopEvent;
     HANDLE m_hWorkerThread;
-    bool bInitialized;
+    bool m_bInitialized;
 
     std::string m_sName;
 
