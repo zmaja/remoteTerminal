@@ -17,7 +17,7 @@ SocketOutputNode *cSN;
 
 LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    GrabberNode *cGN = (GrabberNode*)GetWindowLongPtr(hwnd, GWL_USERDATA);
+    GrabberNode *cGN = (GrabberNode*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     switch (message)
     {
     case WM_KEYDOWN:
@@ -30,7 +30,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
         PostQuitMessage(0);
         break;
     case WM_NCCREATE:
-        SetWindowLongPtr(hwnd, GWL_USERDATA, (LONG_PTR)((CREATESTRUCT*)lParam)->lpCreateParams);
+        SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)((CREATESTRUCT*)lParam)->lpCreateParams);
         SetWindowPos(hwnd, 0, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER);
     default:
         return DefWindowProc(hwnd, message, wParam, lParam);
@@ -42,7 +42,7 @@ int main()
 {
     GrabberNode *cGN = new GrabberNode(10, "GN");
     JPEGCompressorNode *cPN = new JPEGCompressorNode(10, "PN", 30, false);
-    SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "192.168.0.2", 8888);
+    SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "127.0.0.1", 8888);
 
     cGN->SetNextProcessingNode(cPN);
     cPN->SetNextProcessingNode(cSN);
