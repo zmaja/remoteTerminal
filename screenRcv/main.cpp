@@ -59,7 +59,7 @@ int main() {
     while(!kbhit()){
         sleep(1);
     }
-    cout << " Main: nothing happend." << endl;
+    DEBUG_MSG(" Main: nothing happend.");
     
     cSIN->Stop();
     cDNDN->Stop();
@@ -72,6 +72,6 @@ int main() {
     delete cSIN;
     delete cDNDN;
     
-    cout << "Main: program completed. Exiting.\n" << endl;
+    DEBUG_MSG("Main: program completed. Exiting.\n");
     return 0;
 }

@@ -1,11 +1,19 @@
 #pragma once
 
 #include <queue>
+#include <iostream>
 
 #define MAX_MAILBOX_SIZE 20
 #define MAX_IMAGE_WIDTH 1920
 #define MAX_IMAGE_HEIGHT 1080
 #define MAX_BPP 32
+
+// Necessary for debug msg logging.
+#ifndef NDEBUG
+#define DEBUG_MSG(str) do { std::cerr << str << std::endl; } while( false )
+#else
+#define DEBUG_MSG(str) do { } while ( false )
+#endif
 
 enum ePixelFormat { PF_UNDEF, PF_ARGB, PF_JPEG };
 

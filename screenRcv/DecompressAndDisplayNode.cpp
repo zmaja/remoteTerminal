@@ -33,7 +33,7 @@ bool DecompressAndDisplayNode::Init()
     // Open the framebuffer device file for reading and writing.
     m_iFramebuffFD = open("/dev/fb0", O_RDWR);
     if (m_iFramebuffFD == -1) {
-        cout << m_sName << " Init: Error, cannot open framebuffer device." << endl;
+        DEBUG_MSG(m_sName << " Init: Error, cannot open framebuffer device.");
         return 0;
     }
     
@@ -71,7 +71,7 @@ void DecompressAndDisplayNode::ProcessMessage(Message* _pcMessage)
     
     // Get variable screen information.
     if (ioctl(m_iFramebuffFD, FBIOGET_VSCREENINFO, &varInfo)) {
-        cout << m_sName << " ProcessMessage: Error reading variable screen info." << endl;
+        DEBUG_MSG(m_sName << " ProcessMessage: Error reading variable screen info.");
     }
     jpeg_mem_src(&m_cInfo, (unsigned char*)p_chTmpPayload,
                 MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT*MAX_BPP >> 3);
@@ -94,7 +94,7 @@ void DecompressAndDisplayNode::ProcessMessage(Message* _pcMessage)
     char* pchFramebuf = (char*)mmap(0, iImgW*iImgH*MAX_BPP>>3, PROT_READ | PROT_WRITE,
                                     MAP_SHARED, m_iFramebuffFD, 0);
     if (pchFramebuf == MAP_FAILED) {
-        cout << m_sName << " ProcessMessage: Failed to mmap framebuffer. " << endl;
+        DEBUG_MSG(m_sName << " ProcessMessage: Failed to mmap framebuffer. ");
     } else {
         while (m_cInfo.output_scanline < iImgH) // loop through image
         {

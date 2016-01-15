@@ -18,19 +18,19 @@ bool ProcessingNode::Init()
      
     if (sem_init(&m_hSemaphore, 0, 0) == -1)
     {
-        cout << m_sName << " Init: CreateSemaphore error" << endl;
+        DEBUG_MSG(m_sName << " Init: CreateSemaphore error");
         return false;
     }
     
     if (sem_init(&m_hStopEvent, 0, 0) == -1) {
-        cout << m_sName << " Init: CreateEvent error" << std::endl;
+        DEBUG_MSG(m_sName << " Init: CreateEvent error");
         sem_destroy(&m_hSemaphore);
         return false;
     }
 
     int iRC = pthread_create(&m_hWorkerThread, 0, ThreadProc, (void*)this);
     if (iRC) {
-        cout << "Init: CreateThread error; return code from pthread_create() is" << iRC << endl;
+        DEBUG_MSG("Init: CreateThread error; return code from pthread_create() is" << iRC);
         sem_destroy(&m_hSemaphore);
         sem_destroy(&m_hStopEvent);
         return false;
@@ -48,7 +48,7 @@ bool ProcessingNode::DeInit()
     void* vJoinStatus;
     int iRC = pthread_join(m_hWorkerThread, &vJoinStatus);
     if (iRC) {
-        cout << "ERROR; return code from pthread_join() is" << iRC << endl;
+        DEBUG_MSG("ERROR; return code from pthread_join() is" << iRC);
         return -1;
     }
 
@@ -77,11 +77,11 @@ bool ProcessingNode::ReceiveMessage(Message* _pcMessage)
         return false;
     if (m_cMessageQueue.QueueMessage(_pcMessage)) {
         if(sem_post(&m_hSemaphore) == -1) {
-            cout << m_sName << " ReceiveMessage: ReleaseSemaphore error" << endl;
+            DEBUG_MSG(m_sName << " ReceiveMessage: ReleaseSemaphore error");
             return false;
         }
     } else {
-        cout << m_sName << " ReceiveMessage: MessageQueue is full. This shouldn't happen" << std::endl;
+        DEBUG_MSG(m_sName << " ReceiveMessage: MessageQueue is full. This shouldn't happen");
         return false;
     }
 
@@ -93,7 +93,7 @@ bool ProcessingNode::Stop()
     if (!bInitialized)
         return false;
     if(sem_post(&m_hStopEvent) == -1) {
-        cout << m_sName << " Stop: SetEvent failed " << endl;
+        DEBUG_MSG(m_sName << " Stop: SetEvent failed ");
         return false;
     }
     return true;
@@ -103,7 +103,7 @@ void ProcessingNode::ProcessMessage(Message* _pcMessage)
 {
     if (bInitialized)
     {
-        cout << m_sName << " ProcessMessage: Sleeping ..." << endl;
+        DEBUG_MSG(m_sName << " ProcessMessage: Sleeping ...");
         sleep(1);
     }
 }
@@ -133,7 +133,7 @@ Message* ProcessingNode::ConsumeMessage()
             return pcMessage;
         }
         else {
-            cout << m_sName << " ConsumeMessage: MessageQueue is empty. This shouldn't happen" << endl;
+            DEBUG_MSG(m_sName << " ConsumeMessage: MessageQueue is empty. This shouldn't happen");
             return 0;
         }
     }
@@ -152,9 +152,9 @@ void* ProcessingNode::ThreadProc(void* _pThreadArg)
     
     if (pcProcessingNode == 0)
     {
-        cout << pcProcessingNode->Name() << " ThreadProc: pcProcessingNode == null" << endl;
+        DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: pcProcessingNode == null");
     }
-    cout << pcProcessingNode->Name() << " ThreadProc: Entered" << endl;
+    DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: Entered");
 
     bool bContinue = true;
     struct timespec semWaitTime;
@@ -177,18 +177,18 @@ void* ProcessingNode::ThreadProc(void* _pThreadArg)
                 continue;
             } else if(iRC == 0) {
                 // Message came, go deal with it.
-                cout << pcProcessingNode->Name() << " ThreadProc: Received message" << endl;
+                DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: Received message");
                 Message* pcMessage = pcProcessingNode->ConsumeMessage();
                 if (pcMessage != 0) {
                     pcProcessingNode->ProcessMessage(pcMessage);
                     pcProcessingNode->GetNextProcessingNode()->ReceiveMessage(pcMessage);
                 } else {
-                    cout << pcProcessingNode->Name() << " ThreadProc: MessageQueue is empty. This shouldn't happen" << endl;
+                    DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: MessageQueue is empty. This shouldn't happen");
                 }
                 continue;
             }
         } else if(iRC == 0) {
-            cout << pcProcessingNode->Name() << " ThreadProc: Received STOP" << endl;
+            DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: Received STOP");
             bContinue = false;
             continue;
         }

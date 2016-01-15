@@ -15,7 +15,7 @@ bool SocketInputNode::Init()
 {
     // Create a UDP socket.
     if((m_iSocket=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1) {
-        cout << m_sName << " Init: creating socket failed."  << endl;
+        DEBUG_MSG(m_sName << " Init: creating socket failed.");
     }
     
     // Zero out the structure.
@@ -27,7 +27,7 @@ bool SocketInputNode::Init()
     
     // Bind the socket to a predefined port.
     if(bind(m_iSocket, (struct sockaddr*)&m_myAddr, sizeof(m_myAddr) ) == -1) {
-        cout << m_sName << " Init: binding socket failed."  << endl;
+        DEBUG_MSG(m_sName << " Init: binding socket failed.");
     }
     
     unsigned int uiOptVal, uiOptLen = sizeof(unsigned int);
@@ -52,7 +52,7 @@ bool SocketInputNode::DeInit()
     int iResult = close(m_iSocket);
     if (iResult == -1)
     {
-        cout << m_sName << " Deinit: closesocket failed. " << endl;
+        DEBUG_MSG(m_sName << " Deinit: closesocket failed. ");
         bRetVal = false;
     }
 
@@ -94,7 +94,7 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
                                 (struct sockaddr*) &m_sourceAddr,
                                 &uiSrcLen);
             if(iRecvLen == -1) {
-                cout << m_sName << " ProcessMessage: Error reading TYPE field. " << endl;
+                DEBUG_MSG(m_sName << " ProcessMessage: Error reading TYPE field. ");
                 continue; // Packets lost, go wait for next frame.
             }
             if(iRecvLen != 4*sizeof(tMsgTypeField)) {
@@ -121,7 +121,7 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
                             (struct sockaddr*) &m_sourceAddr,
                             &uiSrcLen);
         if(iRecvLen == -1) {
-            cout << m_sName << " ProcessMessage: Error reading max packet size on the source machine. " << endl;
+            DEBUG_MSG(m_sName << " ProcessMessage: Error reading max packet size on the source machine. ");
             continue; // Packets lost, go wait for next frame.
         }
         if(iRecvLen != sizeof(tMaxPacketSizeField)){
@@ -135,7 +135,7 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
                             (struct sockaddr*) &m_sourceAddr,
                             &uiSrcLen);
         if(iRecvLen == -1) {
-            cout << m_sName << " ProcessMessage: Error reading image size. " << endl;
+            DEBUG_MSG(m_sName << " ProcessMessage: Error reading image size. ");
             continue; // Packets lost, go wait for next frame.
         }
         if(iRecvLen != sizeof(tImgSizeField)){
@@ -143,7 +143,7 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
         }
         imgSize = *((int*)pchTmpBuf);
         _pcMessage->SetValidBytes(imgSize);
-        cout << m_sName << " ProcessMessage: payload size. " << imgSize << endl;
+        DEBUG_MSG(m_sName << " ProcessMessage: payload size. " << imgSize);
         // Read the image.
         iRecvLen = 0;
         
@@ -157,14 +157,14 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
                                 (struct sockaddr*) &m_sourceAddr,
                                 &uiSrcLen);
             if(iRecvLen == -1) {
-                cout << m_sName << " ProcessMessage: Error reading image (max packet size). " << endl;
+                DEBUG_MSG(m_sName << " ProcessMessage: Error reading image (max packet size). ");
             } else {
                 if(iRecvLen < m_iSourceMaxMsgSize)
                 {
                     bPacketsLost = true;
                     break;
                 }
-                cout << m_sName << " ProcessMessage: Primljeno: " << iRecvLen << endl;
+                DEBUG_MSG(m_sName << " ProcessMessage: Primljeno: " << iRecvLen);
                 pchTmpBuf += iRecvLen;
                 imgSize -= iRecvLen;
             }
@@ -182,7 +182,7 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
                             (struct sockaddr*) &m_sourceAddr,
                             &uiSrcLen);
         if (iRecvLen == -1) {
-            cout << m_sName << " ProcessMessage: Error reading image leftovers. " << endl;
+            DEBUG_MSG(m_sName << " ProcessMessage: Error reading image leftovers. ");
             continue; // Packets lost, go wait for next frame.
         }
         if((imgSize - iRecvLen) != 0){
