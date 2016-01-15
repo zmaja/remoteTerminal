@@ -20,7 +20,7 @@ bool GrabberNode::Init()
 
     if (m_hMutex == NULL)
     {
-        std::cout << m_sName << " Init: CreateMutex error: " << GetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " Init: CreateMutex error: " << GetLastError());
         return false;
     }
 
@@ -70,7 +70,7 @@ void GrabberNode::ProcessMessage(Message * _pcMessage)
         // The thread got ownership of the mutex
     case WAIT_OBJECT_0:
         __try {
-            //std::cout << m_sName << " ProcessMessage: ProcessMessage ..." << std::endl;
+            //DEBUG_MSG(m_sName << " ProcessMessage: ProcessMessage ...");
             int start = GetTickCount();
             _pcMessage->SetStartTime(GetTickCount());
             _pcMessage->SetEndTime(-1);
@@ -82,7 +82,7 @@ void GrabberNode::ProcessMessage(Message * _pcMessage)
             GetDIBits(m_hCaptureDC, m_hCaptureBitmap, 0, m_iScreenHeight,
                 _pcMessage->GetPayloadAddress(), (BITMAPINFO*)&m_bmi, DIB_RGB_COLORS);
             int end = GetTickCount();
-            std::cout << m_sName << " ProcessMessage: TotalGrabTime: " << end - start << "ms" << std::endl;
+			DEBUG_MSG(m_sName << " ProcessMessage: TotalGrabTime: " << end - start << "ms");
         }
 
         __finally {

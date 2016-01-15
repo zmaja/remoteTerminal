@@ -24,7 +24,7 @@ bool SocketOutputNode::Init()
     int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != NO_ERROR)
     {
-        std::cout << m_sName << " Init: WSAStartup failed with error: " << iResult << std::endl;
+		DEBUG_MSG(m_sName << " Init: WSAStartup failed with error: " << iResult);
         return false;
     }
 
@@ -33,7 +33,7 @@ bool SocketOutputNode::Init()
     SendSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (SendSocket == INVALID_SOCKET)
     {
-        std::cout << m_sName << " Init: socket failed with error: " << WSAGetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " Init: socket failed with error: " << WSAGetLastError());
         WSACleanup();
         return false;
     }
@@ -54,7 +54,7 @@ bool SocketOutputNode::Init()
     }
     else
     {
-        std::cout << m_sName << " Init: getsockopt failed with error: " << WSAGetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " Init: getsockopt failed with error: " << WSAGetLastError());
         WSACleanup();
         return false;
     }
@@ -73,7 +73,7 @@ bool SocketOutputNode::DeInit()
     int iResult = closesocket(SendSocket);
     if (iResult == SOCKET_ERROR)
     {
-        std::cout << m_sName << " Deinit: closesocket failed with error: " << WSAGetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " Deinit: closesocket failed with error: " << WSAGetLastError());
         bRetVal = false;
     }
 
@@ -105,19 +105,19 @@ void SocketOutputNode::ProcessMessage(Message * _pcMessage)
         (const char *)tmpsend, 16, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR)
     {
-        std::cout << m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError());
     }
     iResult = sendto(SendSocket,
         (const char *)&m_iMaxMsgSize, 4, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR)
     {
-        std::cout << m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError());
     }
     iResult = sendto(SendSocket,
         (const char *)&iPayloadSize, 4, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR)
     {
-        std::cout << m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError());
     }
     if (iPayloadSize > m_iMaxMsgSize)
     {
@@ -127,7 +127,7 @@ void SocketOutputNode::ProcessMessage(Message * _pcMessage)
                 (const char *)pchPayloadAddress, m_iMaxMsgSize, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
             if (iResult == SOCKET_ERROR)
             {
-                std::cout << m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError() << std::endl;
+				DEBUG_MSG(m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError());
             }
             pchPayloadAddress += m_iMaxMsgSize;
             iPayloadSize -= m_iMaxMsgSize;
@@ -138,15 +138,15 @@ void SocketOutputNode::ProcessMessage(Message * _pcMessage)
         (const char *)pchPayloadAddress, iPayloadSize, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR)
     {
-        std::cout << m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError() << std::endl;
+		DEBUG_MSG(m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError());
     }
 
     int end = GetTickCount();
-    std::cout << m_sName << " ProcessMessage: TotalSendTime: " << end - start << "ms" << std::endl;
+	DEBUG_MSG(m_sName << " ProcessMessage: TotalSendTime: " << end - start << "ms");
 
     _pcMessage->SetEndTime(GetTickCount());
 
-    std::cout << m_sName << " ProcessMessage: TotalProcessingTime: " << _pcMessage->TotalProcessingTime() << "ms" << std::endl;
+	DEBUG_MSG(m_sName << " ProcessMessage: TotalProcessingTime: " << _pcMessage->TotalProcessingTime() << "ms");
 
     //Sleep(200);
     m_iMaxMsgSize = tmp2;

@@ -248,7 +248,7 @@ void JPEGCompressorNode::ProcessMessage(Message * _pcMessage)
     memcpy(_pcMessage->GetPayloadAddress(), m_pcStorage, m_iValidBytes);
     
     int end = GetTickCount();
-    std::cout << m_sName << " ProcessMessage: TotalCompressTime: " << end - start << "ms" << std::endl;
+	DEBUG_MSG(m_sName << " ProcessMessage: TotalCompressTime: " << end - start << "ms");
 
     if (m_bSaveToFile) {
         char sFileName[100];
