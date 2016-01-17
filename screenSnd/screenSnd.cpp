@@ -14,7 +14,7 @@
 char szClassName[] = "WindowsApp";
 
 //#define __GDI_GRABBER
-#define __SEND_TO_LOCAL_HOST
+//#define __SEND_TO_LOCAL_HOST
 
 LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -53,7 +53,7 @@ int main()
 #ifdef __SEND_TO_LOCAL_HOST
     SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "127.0.0.1", 8888);
 #else //__SEND_TO_LOCAL_HOST
-    SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "192.168.178.34", 8888);
+    SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "192.168.1.133", 8888);
 #endif //__SEND_TO_LOCAL_HOST
 
     cGN->SetNextProcessingNode(cPN);

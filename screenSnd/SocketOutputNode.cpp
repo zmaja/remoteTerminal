@@ -82,7 +82,6 @@ bool SocketOutputNode::DeInit()
     return bRetVal;
 }
 
-#define FRAME 2
 int iGlobal = 0;
 void SocketOutputNode::ProcessMessage(Message * _pcMessage)
 {
@@ -96,25 +95,14 @@ void SocketOutputNode::ProcessMessage(Message * _pcMessage)
     int iPayloadSize = _pcMessage->GetValidBytes();
     char *pchPayloadAddress = (char *)_pcMessage->GetPayloadAddress();
 
-    int iMessageType = FRAME;
-    char tmpsend[16];
-    memset(tmpsend, 0, 16);
-    int* tmp = (int *)&tmpsend[0];
-    *tmp = FRAME;
+    tFrameMessage FrameMessage;
+    memset(&FrameMessage, 0, sizeof(tFrameMessage));
+    FrameMessage.identificator = MSG_FRAME;
+    FrameMessage.iMaxMsgSize = m_iMaxMsgSize;
+    FrameMessage.iPayloadSize = iPayloadSize;
+
     iResult = sendto(SendSocket,
-        (const char *)tmpsend, 16, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
-    if (iResult == SOCKET_ERROR)
-    {
-        DEBUG_MSG(m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError());
-    }
-    iResult = sendto(SendSocket,
-        (const char *)&m_iMaxMsgSize, 4, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
-    if (iResult == SOCKET_ERROR)
-    {
-        DEBUG_MSG(m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError());
-    }
-    iResult = sendto(SendSocket,
-        (const char *)&iPayloadSize, 4, 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
+        (const char *)&FrameMessage, sizeof(tFrameMessage), 0, (SOCKADDR *)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR)
     {
         DEBUG_MSG(m_sName << " ProcessMessage: sendto failed with error: " << WSAGetLastError());

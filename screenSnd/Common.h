@@ -53,7 +53,7 @@ public:
     int MailboxSize();
 };
 
-enum MessageIdentificator { MSG_FRAME = 2, MSG_KEYBOARD, MSG_MOUSE };
+enum MessageIdentificator { MSG_START = 0, MSG_STOP, MSG_FRAME, MSG_KEYBOARD, MSG_MOUSE };
 enum MouseEventType { MOUSE_LEFT = 1, MOUSE_RIGHT, MOUSE_MOVE };
 
 typedef struct _tPosition
@@ -78,3 +78,11 @@ typedef struct _tMouseEvent
         char pressed;
     };
 } tMouseEvent;
+
+typedef struct _tFrameMessage
+{
+    MessageIdentificator identificator;
+    int iMaxMsgSize;
+    int iPayloadSize;
+    int padding;
+} tFrameMessage;
