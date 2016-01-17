@@ -19,6 +19,16 @@ int recvfrom_timeout(int _piSocket, char* _pchBuf, int _iLen, int _iFlags, struc
 
 enum ePixelFormat { PF_UNDEF, PF_ARGB, PF_JPEG };
 
+enum MessageIdentificator { MSG_START = 0, MSG_STOP, MSG_FRAME, MSG_KEYBOARD, MSG_MOUSE };
+
+typedef struct _tFrameMessage
+{
+    MessageIdentificator identificator;
+    int iMaxMsgSize;
+    int iPayloadSize;
+    int padding;
+} tFrameMessage;
+
 class Message {
 private:
     ePixelFormat m_ePixelFormat;

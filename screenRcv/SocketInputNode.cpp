@@ -59,16 +59,11 @@ bool SocketInputNode::DeInit()
     return bRetVal;
 }
 
-#define FRAME 2
-typedef int tMsgTypeField;
-typedef int tMaxPacketSizeField;
-typedef int tImgSizeField;
-
 void SocketInputNode::ProcessMessage(Message* _pcMessage)
 {
     int iRecvLen;
     unsigned int uiSrcLen = sizeof(m_sourceAddr);
-    tImgSizeField imgSize = 0;
+    int iImgSize = 0;
     double dTimeInMill;
     char* pchTmpBuf;
     bool bPacketsLost = false;
@@ -79,17 +74,15 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
         dTimeInMill = (tv.tv_sec) * 1000 + (tv.tv_usec) / 1000 ; // convert tv_sec & tv_usec to milliseconds
         _pcMessage->SetStartTime(dTimeInMill);
         
-        int iType1;
-        int iType2;
-        int iType3;
-        int iType4;
+        tFrameMessage tImgHeader;
+
         pchTmpBuf = (char*)_pcMessage->GetPayloadAddress();
         
         do {
             // Wait for the message type field. It will be in the first 16 bytes.
             iRecvLen = recvfrom_timeout(m_iSocket,
-                                pchTmpBuf,
-                                4*sizeof(tMsgTypeField),
+                                (char*)&tImgHeader,
+                                sizeof(tFrameMessage),
                                 0,
                                 (struct sockaddr*) &m_sourceAddr,
                                 &uiSrcLen,
@@ -99,59 +92,21 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
                 DEBUG_MSG(m_sName << " ProcessMessage: Error reading TYPE field. ");
                 continue; // Packets lost, go wait for next frame.
             }
-            if(iRecvLen != 4*sizeof(tMsgTypeField)) {
+            if(iRecvLen != sizeof(tFrameMessage)) {
                 continue;
             }
-
-            // Read the type from the first 16 bytes.
-            iType1 = *(((int*)pchTmpBuf)+0);
-            iType2 = *(((int*)pchTmpBuf)+1);
-            iType3 = *(((int*)pchTmpBuf)+2);
-            iType4 = *(((int*)pchTmpBuf)+3);
-
-        } while(!(iType1 == FRAME && iType2 == 0 && iType3 == 0 && iType4 == 0));
+            
+        } while(!((tImgHeader.identificator == MSG_FRAME) && (tImgHeader.padding == 0)));
+        iImgSize = tImgHeader.iPayloadSize;
+        _pcMessage->SetValidBytes(iImgSize);
+        m_iSourceMaxMsgSize = tImgHeader.iMaxMsgSize;
+        DEBUG_MSG(m_sName << " ProcessMessage: payload size. " << iImgSize << "maxMsgSize size. " << m_iSourceMaxMsgSize);
         
         
-        // If the type is FRAME:
-        //     - get the max packet size on the other machine
-        //     - get frame (image) size, and
-        //     - continue collecting packets until the image is received.
-        iRecvLen = recvfrom_timeout(m_iSocket,
-                            pchTmpBuf,
-                            sizeof(tMaxPacketSizeField),
-                            0,
-                            (struct sockaddr*) &m_sourceAddr,
-                            &uiSrcLen,
-                            300);
-        if(iRecvLen == -1) {
-            DEBUG_MSG(m_sName << " ProcessMessage: Error reading max packet size on the source machine. ");
-            continue; // Packets lost, go wait for next frame.
-        }
-        if(iRecvLen != sizeof(tMaxPacketSizeField)){
-            continue; // Packets lost, go wait for next frame.
-        }
-        m_iSourceMaxMsgSize = *((int*)pchTmpBuf);
-        iRecvLen = recvfrom_timeout(m_iSocket,
-                            pchTmpBuf,
-                            sizeof(tImgSizeField),
-                            0,
-                            (struct sockaddr*) &m_sourceAddr,
-                            &uiSrcLen,
-                            300);
-        if(iRecvLen == -1) {
-            DEBUG_MSG(m_sName << " ProcessMessage: Error reading image size. ");
-            continue; // Packets lost, go wait for next frame.
-        }
-        if(iRecvLen != sizeof(tImgSizeField)){
-            continue; // Packets lost, go wait for next frame.
-        }
-        imgSize = *((int*)pchTmpBuf);
-        _pcMessage->SetValidBytes(imgSize);
-        DEBUG_MSG(m_sName << " ProcessMessage: payload size. " << imgSize);
         // Read the image.
         iRecvLen = 0;
         
-        while(imgSize > m_iSourceMaxMsgSize){
+        while(iImgSize > m_iSourceMaxMsgSize){
             // While there is enough data, receive
             // the maximum packet size the other machine can send.
             iRecvLen = recvfrom_timeout(m_iSocket,
@@ -171,7 +126,7 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
                 }
                 DEBUG_MSG(m_sName << " ProcessMessage: Primljeno: " << iRecvLen);
                 pchTmpBuf += iRecvLen;
-                imgSize -= iRecvLen;
+                iImgSize -= iRecvLen;
             }
         }
         if(bPacketsLost) {
@@ -182,7 +137,7 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
         // receive what is left.
         iRecvLen = recvfrom_timeout(m_iSocket,
                             pchTmpBuf,
-                            imgSize,
+                            iImgSize,
                             MSG_WAITALL,
                             (struct sockaddr*) &m_sourceAddr,
                             &uiSrcLen,
@@ -191,7 +146,7 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
             DEBUG_MSG(m_sName << " ProcessMessage: Error reading image leftovers. ");
             continue; // Packets lost, go wait for next frame.
         }
-        if((imgSize - iRecvLen) != 0){
+        if((iImgSize - iRecvLen) != 0){
             continue; // Packets lost, go wait for next frame.
         }                   
 
