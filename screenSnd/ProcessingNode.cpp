@@ -24,7 +24,7 @@ bool ProcessingNode::Init()
         NULL);                           // unnamed semaphore
     if (m_hSemaphore == NULL)
     {
-		DEBUG_MSG(m_sName << " Init: CreateSemaphore error");
+        DEBUG_MSG(m_sName << " Init: CreateSemaphore error");
         return false;
     }
     m_hStopEvent = CreateEvent(
@@ -35,7 +35,7 @@ bool ProcessingNode::Init()
         );
     if (m_hStopEvent == NULL)
     {
-		DEBUG_MSG(m_sName << " Init: CreateEvent error");
+        DEBUG_MSG(m_sName << " Init: CreateEvent error");
         CloseHandle(m_hSemaphore);
         return false;
     }
@@ -49,7 +49,7 @@ bool ProcessingNode::Init()
         0); // receive thread identifier
     if (m_hWorkerThread == NULL)
     {
-		DEBUG_MSG(m_sName << " Init: CreateThread error");
+        DEBUG_MSG(m_sName << " Init: CreateThread error");
         CloseHandle(m_hSemaphore);
         CloseHandle(m_hStopEvent);
         return false;
@@ -108,12 +108,12 @@ bool ProcessingNode::ReceiveMessage(Message *_pcMessage)
             1,             // increase count by one
             NULL))         // not interested in previous count
         {
-			DEBUG_MSG(m_sName << " ReceiveMessage: ReleaseSemaphore error");
+            DEBUG_MSG(m_sName << " ReceiveMessage: ReleaseSemaphore error");
             return false;
         }
     }
     else {
-		DEBUG_MSG(m_sName << " ReceiveMessage: MessageQueue is full. This shouldn't happen");
+        DEBUG_MSG(m_sName << " ReceiveMessage: MessageQueue is full. This shouldn't happen");
         return false;
     }
 
@@ -126,7 +126,7 @@ bool ProcessingNode::Stop()
         return false;
     if (!SetEvent(m_hStopEvent))
     {
-		DEBUG_MSG(m_sName << " Stop: SetEvent failed " + GetLastError());
+        DEBUG_MSG(m_sName << " Stop: SetEvent failed " + GetLastError());
         return false;
     }
     return true;
@@ -136,7 +136,7 @@ void ProcessingNode::ProcessMessage(Message * _pcMessage)
 {
     if (m_bInitialized)
     {
-		DEBUG_MSG(m_sName << " ProcessMessage: Sleeping ...");
+        DEBUG_MSG(m_sName << " ProcessMessage: Sleeping ...");
         Sleep(2000);
     }
 }
@@ -180,9 +180,9 @@ DWORD WINAPI ProcessingNode::ThreadProc(LPVOID lpParam)
     ProcessingNode *pcProcessingNode = (ProcessingNode *)lpParam;
     if (pcProcessingNode == NULL)
     {
-		DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: pcProcessingNode == NULL");
+        DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: pcProcessingNode == NULL");
     }
-	DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: Entered");
+    DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: Entered");
 
     bool bContinue = true;
 
@@ -220,18 +220,18 @@ DWORD WINAPI ProcessingNode::ThreadProc(LPVOID lpParam)
                 pcProcessingNode->GetNextProcessingNode()->ReceiveMessage(pcMessage);
             }
             else {
-				DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: MessageQueue is empty. This shouldn't happen");
+                DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: MessageQueue is empty. This shouldn't happen");
             }
             break;
         }
 
         case WAIT_TIMEOUT:
-			DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: Wait timeout");
+            DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: Wait timeout");
             break;
 
             // Return value is invalid.
         default:
-			DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: Wait error: " + GetLastError());
+            DEBUG_MSG(pcProcessingNode->Name() << " ThreadProc: Wait error: " + GetLastError());
             ExitProcess(0);
         }
 

@@ -12,12 +12,12 @@ SocketReceiverNode::SocketReceiverNode(std::string _sName, int _iPort)
     m_hStopEvent = NULL;
     m_hWorkerThread = NULL;
 
-	m_iMaxMsgSize = 0;
+    m_iMaxMsgSize = 0;
     m_iPort = _iPort;
 
     SOCKET ReceiveSocket = INVALID_SOCKET;
 
-	SenderAddrSize = sizeof(SenderAddr);
+    SenderAddrSize = sizeof(SenderAddr);
 
     m_bInitialized = false;
 }
@@ -32,7 +32,7 @@ bool SocketReceiverNode::Init()
     int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != NO_ERROR)
     {
-		DEBUG_MSG(m_sName << " Init: WSAStartup failed with error: " << iResult);
+        DEBUG_MSG(m_sName << " Init: WSAStartup failed with error: " << iResult);
         return false;
     }
 
@@ -41,7 +41,7 @@ bool SocketReceiverNode::Init()
     ReceiveSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (ReceiveSocket == INVALID_SOCKET)
     {
-		DEBUG_MSG(m_sName << " Init: socket failed with error: " << WSAGetLastError());
+        DEBUG_MSG(m_sName << " Init: socket failed with error: " << WSAGetLastError());
         WSACleanup();
         return false;
     }
@@ -58,26 +58,26 @@ bool SocketReceiverNode::Init()
     // Bind the socket.
     iResult = bind(ReceiveSocket, (SOCKADDR *)&myAddr, sizeof(myAddr));
     if (iResult == SOCKET_ERROR) {
-		DEBUG_MSG(m_sName << " Init: bind failed with error: " << WSAGetLastError());
+        DEBUG_MSG(m_sName << " Init: bind failed with error: " << WSAGetLastError());
         closesocket(ReceiveSocket);
         WSACleanup();
         return false;
     }
 
-	int iOptVal;
-	int iOptLen = sizeof(int);
+    int iOptVal;
+    int iOptLen = sizeof(int);
 
-	if (getsockopt(ReceiveSocket, SOL_SOCKET, SO_MAX_MSG_SIZE, (char*)&iOptVal, &iOptLen) != SOCKET_ERROR)
-	{
-		m_iMaxMsgSize = iOptVal;
-	}
-	else
-	{
-		DEBUG_MSG(m_sName << " Init: getsockopt failed with error: " << WSAGetLastError());
-		closesocket(ReceiveSocket);
-		WSACleanup();
-		return false;
-	}
+    if (getsockopt(ReceiveSocket, SOL_SOCKET, SO_MAX_MSG_SIZE, (char*)&iOptVal, &iOptLen) != SOCKET_ERROR)
+    {
+        m_iMaxMsgSize = iOptVal;
+    }
+    else
+    {
+        DEBUG_MSG(m_sName << " Init: getsockopt failed with error: " << WSAGetLastError());
+        closesocket(ReceiveSocket);
+        WSACleanup();
+        return false;
+    }
 
     m_hStopEvent = CreateEvent(
         NULL,               // default security attributes
@@ -87,9 +87,9 @@ bool SocketReceiverNode::Init()
         );
     if (m_hStopEvent == NULL)
     {
-		DEBUG_MSG(m_sName << " Init: CreateEvent error");
-		closesocket(ReceiveSocket);
-		WSACleanup();
+        DEBUG_MSG(m_sName << " Init: CreateEvent error");
+        closesocket(ReceiveSocket);
+        WSACleanup();
         return false;
     }
 
@@ -102,10 +102,10 @@ bool SocketReceiverNode::Init()
         0); // receive thread identifier
     if (m_hWorkerThread == NULL)
     {
-		DEBUG_MSG(m_sName << " Init: CreateThread error");
+        DEBUG_MSG(m_sName << " Init: CreateThread error");
         CloseHandle(m_hStopEvent);
-		closesocket(ReceiveSocket);
-		WSACleanup();
+        closesocket(ReceiveSocket);
+        WSACleanup();
         return false;
     }
 
@@ -142,7 +142,7 @@ bool SocketReceiverNode::Stop()
         return false;
     if (!SetEvent(m_hStopEvent))
     {
-		DEBUG_MSG(m_sName << " Stop: SetEvent failed " + GetLastError());
+        DEBUG_MSG(m_sName << " Stop: SetEvent failed " + GetLastError());
         return false;
     }
     return true;
@@ -277,7 +277,7 @@ void SocketReceiverNode::GenerateRightMouseClickEvent(int _iXpos, int _iYpos, in
     GenerateRightMouseReleaseEvent();
 }
 
-int SocketReceiverNode::recvfrom_timeout(SOCKET s, char *buf, int len, int flags, int timeout)
+int SocketReceiverNode::recvfrom_timeout(SOCKET s, char *buf, int len, int flags, struct sockaddr *from, int *fromlen, int timeout)
 {
     struct timeval timeout_value;
     timeout_value.tv_usec = timeout*1000;
@@ -296,123 +296,121 @@ int SocketReceiverNode::recvfrom_timeout(SOCKET s, char *buf, int len, int flags
     }
     else
     {
-        return recvfrom(s, buf, len, flags, (SOCKADDR *)& SenderAddr, &SenderAddrSize);
+        return recvfrom(s, buf, len, flags, from, fromlen);
     }
 }
 
-
-
 void SocketReceiverNode::CheckSocketForIncommingMessages()
 {
-	//DEBUG_MSG(m_sName << " CheckSocketForIncommingMessages: Entered");
-	char *pchRecvBuffer = new char[m_iMaxMsgSize];
-	int iRet = recvfrom_timeout(ReceiveSocket, pchRecvBuffer, m_iMaxMsgSize, 0, 500); //wait on recvfrom for 100ms
+    //DEBUG_MSG(m_sName << " CheckSocketForIncommingMessages: Entered");
+    char *pchRecvBuffer = new char[m_iMaxMsgSize];
+    int iRet = recvfrom_timeout(ReceiveSocket, pchRecvBuffer, m_iMaxMsgSize, 0, (SOCKADDR *)& SenderAddr, &SenderAddrSize, 500); //wait on recvfrom for 100ms
 
-	if (iRet > 0)
-	{
-		DEBUG_MSG(m_sName << " CheckSocketForIncommingMessages: Got something");
-		ProcessReceivedMessage(pchRecvBuffer, iRet);
-	}
+    if (iRet > 0)
+    {
+        DEBUG_MSG(m_sName << " CheckSocketForIncommingMessages: Got something");
+        ProcessReceivedMessage(pchRecvBuffer, iRet);
+    }
 
-	delete[]pchRecvBuffer;
+    delete[]pchRecvBuffer;
 }
 
 void SocketReceiverNode::ProcessKeyboardEvent(tKeyboardEvent *_psKeyboardEvent)
 {
-	DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received keyboard event");
-	if (_psKeyboardEvent->identificator != MSG_KEYBOARD)
-	{
-		DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad keyboard event");
-	}
-	else {
-		switch (_psKeyboardEvent->pressed)
-		{
-		case 0:
-			GenerateKeyReleaseEvent(_psKeyboardEvent->virtual_key_code);
-			break;
-		case 1:
-			GenerateKeyPressEvent(_psKeyboardEvent->virtual_key_code);
-			break;
-		default:
-			DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad keyboard press event");
-			break;
-		}
-	}
+    DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received keyboard event");
+    if (_psKeyboardEvent->identificator != MSG_KEYBOARD)
+    {
+        DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad keyboard event");
+    }
+    else {
+        switch (_psKeyboardEvent->pressed)
+        {
+        case 0:
+            GenerateKeyReleaseEvent(_psKeyboardEvent->virtual_key_code);
+            break;
+        case 1:
+            GenerateKeyPressEvent(_psKeyboardEvent->virtual_key_code);
+            break;
+        default:
+            DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad keyboard press event");
+            break;
+        }
+    }
 }
 
 void SocketReceiverNode::ProcessMouseEvent(tMouseEvent *_psMouseEvent) {
-	DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received mouse event");
-	int iScreenWidth = 0;
-	int iScreenHeight = 0;
-	if (_psMouseEvent->identificator != MSG_MOUSE)
-	{
-		DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad mouse event");
-	}
-	else {
-		switch (_psMouseEvent->event)
-		{
-		case MOUSE_LEFT:
-			switch (_psMouseEvent->pressed)
-			{
-			case 0:
-				GenerateLeftMouseReleaseEvent();
-				break;
-			case 1:
-				GenerateLeftMousePressEvent();
-				break;
-			default:
-				DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad left mouse event");
-				break;
-			}
-			break;
-		case MOUSE_RIGHT:
-			switch (_psMouseEvent->pressed)
-			{
-			case 0:
-				GenerateRightMouseReleaseEvent();
-				break;
-			case 1:
-				GenerateRightMousePressEvent();
-				break;
-			default:
-				DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad right mouse event");
-				break;
-			}
-			break;
-		case MOUSE_MOVE:
-			iScreenWidth = GetSystemMetrics(SM_CXSCREEN);
-			iScreenHeight = GetSystemMetrics(SM_CYSCREEN);
-			if ((_psMouseEvent->pos.x > iScreenWidth) || (_psMouseEvent->pos.y > iScreenHeight))
-			{
-				DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad mouse move event");
-			}
-			else {
-				GenerateMouseMoveEvent(_psMouseEvent->pos.x, _psMouseEvent->pos.y, iScreenWidth, iScreenHeight);
-			}
-			break;
-		default:
-			DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad mouse event");
-			break;
-		}
-	}
+    DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received mouse event");
+    int iScreenWidth = 0;
+    int iScreenHeight = 0;
+    if (_psMouseEvent->identificator != MSG_MOUSE)
+    {
+        DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad mouse event");
+    }
+    else {
+        switch (_psMouseEvent->event)
+        {
+        case MOUSE_LEFT:
+            switch (_psMouseEvent->pressed)
+            {
+            case 0:
+                GenerateLeftMouseReleaseEvent();
+                break;
+            case 1:
+                GenerateLeftMousePressEvent();
+                break;
+            default:
+                DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad left mouse event");
+                break;
+            }
+            break;
+        case MOUSE_RIGHT:
+            switch (_psMouseEvent->pressed)
+            {
+            case 0:
+                GenerateRightMouseReleaseEvent();
+                break;
+            case 1:
+                GenerateRightMousePressEvent();
+                break;
+            default:
+                DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad right mouse event");
+                break;
+            }
+            break;
+        case MOUSE_MOVE:
+            iScreenWidth = GetSystemMetrics(SM_CXSCREEN);
+            iScreenHeight = GetSystemMetrics(SM_CYSCREEN);
+            if ((_psMouseEvent->pos.x > iScreenWidth) || (_psMouseEvent->pos.y > iScreenHeight))
+            {
+                DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad mouse move event");
+            }
+            else {
+                GenerateMouseMoveEvent(_psMouseEvent->pos.x, _psMouseEvent->pos.y, iScreenWidth, iScreenHeight);
+            }
+            break;
+        default:
+            DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received bad mouse event");
+            break;
+        }
+    }
 }
 
 void SocketReceiverNode::ProcessReceivedMessage(char *_pcIncommingMessage, int _iSize)
 {
-	switch (_iSize)
-	{
-	case sizeof(tKeyboardEvent) :
-		ProcessKeyboardEvent((tKeyboardEvent *)_pcIncommingMessage);
-		break;
+    switch (_iSize)
+    {
+    case sizeof(tKeyboardEvent) :
+        ProcessKeyboardEvent((tKeyboardEvent *)_pcIncommingMessage);
+        break;
 
-	case sizeof(tMouseEvent) :
-		ProcessMouseEvent((tMouseEvent *)_pcIncommingMessage);
-		break;
+    case sizeof(tMouseEvent) :
+        ProcessMouseEvent((tMouseEvent *)_pcIncommingMessage);
+        break;
 
-	default:
-		DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received unknown message: ");
-		break;
-	}
+    default:
+        DEBUG_MSG(m_sName << " ProcessReceivedMessage: Received unknown message: ");
+        break;
+    }
 }
 
 
@@ -421,9 +419,9 @@ DWORD WINAPI SocketReceiverNode::ThreadProc(LPVOID lpParam)
     SocketReceiverNode *pcSocketReceiverNode = (SocketReceiverNode *)lpParam;
     if (pcSocketReceiverNode == NULL)
     {
-		DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: pcSocketReceiverNode == NULL");
+        DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: pcSocketReceiverNode == NULL");
     }
-	DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Entered");
+    DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Entered");
 
     bool bContinue = true;
 
@@ -437,22 +435,22 @@ DWORD WINAPI SocketReceiverNode::ThreadProc(LPVOID lpParam)
         {
             // Stop event signalled
         case WAIT_OBJECT_0:
-			DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Received stop");
+            DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Received stop");
             bContinue = false;
             break;
 
             // hEvents[1] was signaled (MessageQueue semaphore)
         case WAIT_TIMEOUT:
-			//DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Wait timeout");
+            //DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Wait timeout");
             break;
 
             // Return value is invalid.
         default:
-			DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Wait error: " + GetLastError());
+            DEBUG_MSG(pcSocketReceiverNode->Name() << " ThreadProc: Wait error: " + GetLastError());
             ExitProcess(0);
         }
 
-		pcSocketReceiverNode->CheckSocketForIncommingMessages();
+        pcSocketReceiverNode->CheckSocketForIncommingMessages();
     };
 
     return 0;

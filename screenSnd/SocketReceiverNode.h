@@ -12,10 +12,10 @@ protected:
     int m_iPort;
     WSADATA wsaData;
     SOCKET ReceiveSocket;
-	int m_iMaxMsgSize;
+    int m_iMaxMsgSize;
 
-	sockaddr_in SenderAddr;
-	int SenderAddrSize;
+    sockaddr_in SenderAddr;
+    int SenderAddrSize;
 
     std::string m_sName;
 
@@ -29,12 +29,12 @@ protected:
     void SocketReceiverNode::GenerateLeftMouseClickEvent(int _iXpos, int _iYpos, int _iDisplayWidth, int _iDisplayHeight);
     void SocketReceiverNode::GenerateRightMouseClickEvent(int _iXpos, int _iYpos, int _iDisplayWidth, int _iDisplayHeight);
 
-    int recvfrom_timeout(SOCKET s, char *buf, int len, int flags, int timeout);
+    int recvfrom_timeout(SOCKET s, char *buf, int len, int flags, struct sockaddr *from, int *fromlen, int timeout);
 
     void CheckSocketForIncommingMessages();
-	void ProcessReceivedMessage(char *_pcIncommingMessage, int _iSize);
-	void ProcessKeyboardEvent(tKeyboardEvent *_psKeyboardEvent);
-	void ProcessMouseEvent(tMouseEvent *_psMouseEvent);
+    void ProcessReceivedMessage(char *_pcIncommingMessage, int _iSize);
+    void ProcessKeyboardEvent(tKeyboardEvent *_psKeyboardEvent);
+    void ProcessMouseEvent(tMouseEvent *_psMouseEvent);
 
     static DWORD WINAPI ThreadProc(LPVOID);
 public:

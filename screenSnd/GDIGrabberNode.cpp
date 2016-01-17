@@ -1,14 +1,15 @@
 #include <iostream>
 #include <string>
 
-#include "GrabberNode.h"
+#include "GDIGrabberNode.h"
 
-GrabberNode::GrabberNode(int _iMailboxSize, std::string _sName) : ProcessingNode(_iMailboxSize, _sName)
+GDIGrabberNode::GDIGrabberNode(int _iMailboxSize, std::string _sName) : BasicGrabberNode(_iMailboxSize, _sName)
 {
-
+    m_iScreenWidth = 0;
+    m_iScreenHeight = 0;
 }
 
-bool GrabberNode::Init()
+bool GDIGrabberNode::Init()
 {
     if (ProcessingNode::Init() == FALSE)
         return false;
@@ -20,7 +21,7 @@ bool GrabberNode::Init()
 
     if (m_hMutex == NULL)
     {
-		DEBUG_MSG(m_sName << " Init: CreateMutex error: " << GetLastError());
+        DEBUG_MSG(m_sName << " Init: CreateMutex error: " << GetLastError());
         return false;
     }
 
@@ -35,7 +36,7 @@ bool GrabberNode::Init()
 
     m_bmi.biSize = sizeof(BITMAPINFOHEADER);
     m_bmi.biPlanes = 1;
-    m_bmi.biBitCount = 24;
+    m_bmi.biBitCount = 32;
     m_bmi.biWidth = m_iScreenWidth;
     m_bmi.biHeight = -m_iScreenHeight;
     m_bmi.biCompression = BI_RGB;
@@ -44,7 +45,7 @@ bool GrabberNode::Init()
     return true;
 }
 
-bool GrabberNode::DeInit()
+bool GDIGrabberNode::DeInit()
 {
     bool bRetVal = ProcessingNode::DeInit();
 
@@ -54,10 +55,13 @@ bool GrabberNode::DeInit()
 
     CloseHandle(m_hMutex);
 
+    m_iScreenWidth = 0;
+    m_iScreenHeight = 0;
+
     return bRetVal;
 }
 
-void GrabberNode::ProcessMessage(Message * _pcMessage)
+void GDIGrabberNode::ProcessMessage(Message * _pcMessage)
 {
     DWORD dwWaitResult;
 
@@ -76,13 +80,13 @@ void GrabberNode::ProcessMessage(Message * _pcMessage)
             _pcMessage->SetEndTime(-1);
             _pcMessage->SetWidth(m_iScreenWidth);
             _pcMessage->SetHeight(m_iScreenHeight);
-            _pcMessage->SetValidBytes(m_iScreenWidth * m_iScreenHeight * 3);
+            _pcMessage->SetValidBytes(m_iScreenWidth * m_iScreenHeight * 4);
             BitBlt(m_hCaptureDC, 0, 0, m_iScreenWidth, m_iScreenHeight,
                 m_hDesktopDC, 0, 0, SRCCOPY);
             GetDIBits(m_hCaptureDC, m_hCaptureBitmap, 0, m_iScreenHeight,
                 _pcMessage->GetPayloadAddress(), (BITMAPINFO*)&m_bmi, DIB_RGB_COLORS);
             int end = GetTickCount();
-			DEBUG_MSG(m_sName << " ProcessMessage: TotalGrabTime: " << end - start << "ms");
+            DEBUG_MSG(m_sName << " ProcessMessage: TotalGrabTime: " << end - start << "ms");
         }
 
         __finally {
@@ -100,7 +104,7 @@ void GrabberNode::ProcessMessage(Message * _pcMessage)
     }
 }
 
-void GrabberNode::DisplayResolutionChanged()
+void GDIGrabberNode::DisplayResolutionChanged()
 {
     DWORD dwWaitResult;
 
@@ -127,11 +131,11 @@ void GrabberNode::DisplayResolutionChanged()
 
             m_bmi.biSize = sizeof(BITMAPINFOHEADER);
             m_bmi.biPlanes = 1;
-            m_bmi.biBitCount = 24;
+            m_bmi.biBitCount = 32;
             m_bmi.biWidth = m_iScreenWidth;
             m_bmi.biHeight = -m_iScreenHeight;
             m_bmi.biCompression = BI_RGB;
-            m_bmi.biSizeImage = 0;// 3 * ScreenX * ScreenY;
+            m_bmi.biSizeImage = 0;// 4 * ScreenX * ScreenY;
         }
 
         __finally {

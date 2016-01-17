@@ -236,9 +236,10 @@ void JPEGCompressorNode::ProcessMessage(Message * _pcMessage)
     {
         for (int posx = 0; posx < iWidth; posx++)
         {
-            pchReorderBuffer[posx * 3 + 0] = pchPayloadAddress[posy*iWidth * 3 + posx * 3 + 2];
-            pchReorderBuffer[posx * 3 + 1] = pchPayloadAddress[posy*iWidth * 3 + posx * 3 + 1];
-            pchReorderBuffer[posx * 3 + 2] = pchPayloadAddress[posy*iWidth * 3 + posx * 3 + 0];
+            //
+            pchReorderBuffer[posx * 3 + 0] = pchPayloadAddress[posy*iWidth * 4 + posx * 4 + 2];
+            pchReorderBuffer[posx * 3 + 1] = pchPayloadAddress[posy*iWidth * 4 + posx * 4 + 1];
+            pchReorderBuffer[posx * 3 + 2] = pchPayloadAddress[posy*iWidth * 4 + posx * 4 + 0];
         }
         jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
@@ -248,7 +249,7 @@ void JPEGCompressorNode::ProcessMessage(Message * _pcMessage)
     memcpy(_pcMessage->GetPayloadAddress(), m_pcStorage, m_iValidBytes);
     
     int end = GetTickCount();
-	DEBUG_MSG(m_sName << " ProcessMessage: TotalCompressTime: " << end - start << "ms");
+    DEBUG_MSG(m_sName << " ProcessMessage: TotalCompressTime: " << end - start << "ms");
 
     if (m_bSaveToFile) {
         char sFileName[100];

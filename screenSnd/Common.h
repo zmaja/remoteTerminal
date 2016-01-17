@@ -58,23 +58,23 @@ enum MouseEventType { MOUSE_LEFT = 1, MOUSE_RIGHT, MOUSE_MOVE };
 
 typedef struct _tPosition
 {
-	short x;
-	char y;
+    short x;
+    char y;
 } tPosition;
 
 typedef struct _tKeyboardEvent
 {
-	MessageIdentificator identificator;
-	char pressed;
-	char virtual_key_code;
+    MessageIdentificator identificator;
+    char pressed;
+    char virtual_key_code;
 } tKeyboardEvent;
 
 typedef struct _tMouseEvent
 {
-	MessageIdentificator identificator;
-	MouseEventType event;
-	union {
-		tPosition pos;
-		char pressed;
-	};
+    MessageIdentificator identificator;
+    MouseEventType event;
+    union {
+        tPosition pos;
+        char pressed;
+    };
 } tMouseEvent;

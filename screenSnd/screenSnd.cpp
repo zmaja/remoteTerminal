@@ -4,21 +4,21 @@
 #include <stdio.h>
 #include <conio.h>
 
-#include "GrabberNode.h"
+#include "BasicGrabberNode.h"
+#include "GDIGrabberNode.h"
+#include "DXGIGrabberNode.h"
 #include "JPEGCompressorNode.h"
 #include "SocketOutputNode.h"
 #include "SocketReceiverNode.h"
-#include "screenSnd.h"
 
 char szClassName[] = "WindowsApp";
 
-GrabberNode *cGN;
-JPEGCompressorNode *cPN;
-SocketOutputNode *cSN;
+//#define __GDI_GRABBER
+#define __SEND_TO_LOCAL_HOST
 
 LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    GrabberNode *cGN = (GrabberNode*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    BasicGrabberNode *cGN = (BasicGrabberNode*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     switch (message)
     {
     case WM_KEYDOWN:
@@ -41,12 +41,20 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 
 int main()
 {
-	SocketReceiverNode *cSR = new SocketReceiverNode("SR", 8889);
-	cSR->Init();
+    SocketReceiverNode *cSR = new SocketReceiverNode("SR", 8889);
+    cSR->Init();
 
-    GrabberNode *cGN = new GrabberNode(10, "GN");
-    JPEGCompressorNode *cPN = new JPEGCompressorNode(10, "PN", 30, false);
+#ifdef __GDI_GRABBER
+    GDIGrabberNode *cGN = new GDIGrabberNode(10, "GN");
+#else //__GDI_GRABBER
+    DXGIGrabberNode *cGN = new DXGIGrabberNode(10, "GN");
+#endif //__GDI_GRABBER
+    JPEGCompressorNode *cPN = new JPEGCompressorNode(10, "PN", 30, true);
+#ifdef __SEND_TO_LOCAL_HOST
     SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "127.0.0.1", 8888);
+#else //__SEND_TO_LOCAL_HOST
+    SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "192.168.178.34", 8888);
+#endif //__SEND_TO_LOCAL_HOST
 
     cGN->SetNextProcessingNode(cPN);
     cPN->SetNextProcessingNode(cSN);
@@ -93,9 +101,9 @@ int main()
     delete cPN;
 
 
-	cSR->Stop();
-	cSR->DeInit();
-	delete cSR;
+    cSR->Stop();
+    cSR->DeInit();
+    delete cSR;
     
     return 0; 
 }

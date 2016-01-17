@@ -1,7 +1,7 @@
 #pragma once
-#include "ProcessingNode.h"
+#include "BasicGrabberNode.h"
 
-class GrabberNode : public ProcessingNode {
+class GDIGrabberNode : public BasicGrabberNode {
 protected:
     int m_iScreenWidth;
     int m_iScreenHeight;
@@ -13,7 +13,7 @@ protected:
 
     HANDLE m_hMutex;
 public:
-    GrabberNode(int _iMailboxSize, std::string _sName);
+    GDIGrabberNode(int _iMailboxSize, std::string _sName);
     bool Init();
     bool DeInit();
     void ProcessMessage(Message *_pcMessage);
