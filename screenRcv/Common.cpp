@@ -1,3 +1,6 @@
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <sys/select.h>
 #include "Common.h"
 
 Message::Message() {
@@ -92,4 +95,22 @@ Message* MessageQueue::DequeueMessage() {
 
 int MessageQueue::MailboxSize() {
     return m_iMailboxSize;
+}
+
+// Implementation of standard recvfrom function with the addition of timeout.
+int recvfrom_timeout(int _piSocket, char* _pchBuf, int _iLen, int _iFlags, struct sockaddr* _pFrom, unsigned int* _puiFromLen, int _iTimeout) {
+    //struct timeval timeoutValue;
+    //timeoutValue.tv_usec = _iTimeout*1000;
+    //fd_set readFDs;
+
+    //FD_ZERO(&readFDs);
+    //FD_SET(_piSocket, &readFDs);
+    //int iRetVal = select(0, &readFDs, 0, 0, &timeoutValue);
+    //if (iRetVal == -1) {
+        //return -1;
+    //} else if (iRetVal == 0) {
+        //return 0;
+    //} else {
+        return recvfrom(_piSocket, _pchBuf, _iLen, _iFlags, _pFrom, _puiFromLen);
+    //}
 }

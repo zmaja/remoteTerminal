@@ -15,6 +15,8 @@
 #define DEBUG_MSG(str) do { } while ( false )
 #endif
 
+int recvfrom_timeout(int _piSocket, char* _pchBuf, int _iLen, int _iFlags, struct sockaddr* _pFrom, unsigned int* _puiFromLen, int _iTimeout);
+
 enum ePixelFormat { PF_UNDEF, PF_ARGB, PF_JPEG };
 
 class Message {

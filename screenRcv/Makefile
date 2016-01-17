@@ -1,6 +1,6 @@
 IDIR=.
 CC=g++
-CFLAGS=-I$(IDIR) -pthread # -DNDEBUG
+CFLAGS=-I$(IDIR) -pthread #-DNDEBUG
 	
 SRCDIR=.
 
@@ -29,4 +29,4 @@ $(OBJDIR):
 .PHONY: clean
 
 clean:
-	rm -rf $(OBJDIR)/screenrcv $(OBJDIR)/*.o *~ core $(IDIR)/*~
+	@rm -rf $(OBJDIR)/screenrcv $(OBJDIR)/*.o *~ core $(IDIR)/*~

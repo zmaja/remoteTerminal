@@ -87,12 +87,14 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
         
         do {
             // Wait for the message type field. It will be in the first 16 bytes.
-            iRecvLen = recvfrom(m_iSocket,
+            iRecvLen = recvfrom_timeout(m_iSocket,
                                 pchTmpBuf,
                                 4*sizeof(tMsgTypeField),
                                 0,
                                 (struct sockaddr*) &m_sourceAddr,
-                                &uiSrcLen);
+                                &uiSrcLen,
+                                300);
+            DEBUG_MSG(m_sName << " ProcessMessage: RecvLen: " << iRecvLen);
             if(iRecvLen == -1) {
                 DEBUG_MSG(m_sName << " ProcessMessage: Error reading TYPE field. ");
                 continue; // Packets lost, go wait for next frame.
@@ -114,12 +116,13 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
         //     - get the max packet size on the other machine
         //     - get frame (image) size, and
         //     - continue collecting packets until the image is received.
-        iRecvLen = recvfrom(m_iSocket,
+        iRecvLen = recvfrom_timeout(m_iSocket,
                             pchTmpBuf,
                             sizeof(tMaxPacketSizeField),
                             0,
                             (struct sockaddr*) &m_sourceAddr,
-                            &uiSrcLen);
+                            &uiSrcLen,
+                            300);
         if(iRecvLen == -1) {
             DEBUG_MSG(m_sName << " ProcessMessage: Error reading max packet size on the source machine. ");
             continue; // Packets lost, go wait for next frame.
@@ -128,12 +131,13 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
             continue; // Packets lost, go wait for next frame.
         }
         m_iSourceMaxMsgSize = *((int*)pchTmpBuf);
-        iRecvLen = recvfrom(m_iSocket,
+        iRecvLen = recvfrom_timeout(m_iSocket,
                             pchTmpBuf,
                             sizeof(tImgSizeField),
                             0,
                             (struct sockaddr*) &m_sourceAddr,
-                            &uiSrcLen);
+                            &uiSrcLen,
+                            300);
         if(iRecvLen == -1) {
             DEBUG_MSG(m_sName << " ProcessMessage: Error reading image size. ");
             continue; // Packets lost, go wait for next frame.
@@ -150,12 +154,13 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
         while(imgSize > m_iSourceMaxMsgSize){
             // While there is enough data, receive
             // the maximum packet size the other machine can send.
-            iRecvLen = recvfrom(m_iSocket,
+            iRecvLen = recvfrom_timeout(m_iSocket,
                                 pchTmpBuf,
                                 m_iSourceMaxMsgSize,
                                 0,
                                 (struct sockaddr*) &m_sourceAddr,
-                                &uiSrcLen);
+                                &uiSrcLen,
+                                300);
             if(iRecvLen == -1) {
                 DEBUG_MSG(m_sName << " ProcessMessage: Error reading image (max packet size). ");
             } else {
@@ -175,12 +180,13 @@ void SocketInputNode::ProcessMessage(Message* _pcMessage)
         }
         // When there is no enough data to fill the max packet size,
         // receive what is left.
-        iRecvLen = recvfrom(m_iSocket,
+        iRecvLen = recvfrom_timeout(m_iSocket,
                             pchTmpBuf,
                             imgSize,
                             MSG_WAITALL,
                             (struct sockaddr*) &m_sourceAddr,
-                            &uiSrcLen);
+                            &uiSrcLen,
+                            300);
         if (iRecvLen == -1) {
             DEBUG_MSG(m_sName << " ProcessMessage: Error reading image leftovers. ");
             continue; // Packets lost, go wait for next frame.
