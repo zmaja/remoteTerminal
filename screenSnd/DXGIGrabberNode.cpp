@@ -87,7 +87,7 @@ void DXGIGrabberNode::ProcessMessage(Message * _pcMessage)
                 if ((hr != S_OK) || (m_iScreenWidth == 0) || (m_iScreenHeight == 0))
                 {
                     DEBUG_MSG(m_sName << " ProcessMessage: DuplicateDesktop lost");
-                    Sleep(300);
+                    Sleep(10);
                     ReInit();
                 }
             } while (hr != S_OK);

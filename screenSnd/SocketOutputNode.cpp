@@ -136,6 +136,6 @@ void SocketOutputNode::ProcessMessage(Message * _pcMessage)
 
     DEBUG_MSG(m_sName << " ProcessMessage: TotalProcessingTime: " << _pcMessage->TotalProcessingTime() << "ms");
 
-    Sleep(200);
+    //Sleep(200);
     m_iMaxMsgSize = tmp2;
 }

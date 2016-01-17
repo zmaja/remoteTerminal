@@ -412,7 +412,7 @@ HRESULT DXGIManager::ReInit()
 
             CComPtr<IDXGIOutputDuplication> spDXGIOutputDuplication;
             hr = spDXGIOutput1->DuplicateOutput(spDXGIDevice, &spDXGIOutputDuplication);
-            printf("\nUkupno adaptera 2: usli5 %x\n", hr);
+            //printf("\nUkupno adaptera 2: usli5 %x\n", hr);
             if (FAILED(hr))
                 continue;
             m_vOutputs.push_back(
@@ -423,7 +423,6 @@ HRESULT DXGIManager::ReInit()
                     spDXGIOutputDuplication));
         }
     }
-    printf("\nUkupno adaptera 2: %d\n", m_vOutputs.size());
 
     return S_OK;
 }
@@ -598,16 +597,6 @@ HRESULT DXGIManager::GetOutputBits(BYTE* pBits, RECT& rcDest)
 
     if(FAILED(hr))
         return hr;
-
-    // Now pBits have the desktop. Let's paint mouse pointer!
-    if(pBuf != pBits)
-    {
-        DrawMousePointer(pBuf, rcOutput, rcOutput);
-    }
-    else
-    {
-        DrawMousePointer(pBuf, rcOutput, rcDest);
-    }
 
     // We have the pBuf filled with current desktop/monitor image.
     if(pBuf != pBits)

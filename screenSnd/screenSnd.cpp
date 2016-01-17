@@ -13,8 +13,8 @@
 
 char szClassName[] = "WindowsApp";
 
-//#define __GDI_GRABBER
-//#define __SEND_TO_LOCAL_HOST
+#define __GDI_GRABBER
+#define __SEND_TO_LOCAL_HOST
 
 LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -49,7 +49,7 @@ int main()
 #else //__GDI_GRABBER
     DXGIGrabberNode *cGN = new DXGIGrabberNode(10, "GN");
 #endif //__GDI_GRABBER
-    JPEGCompressorNode *cPN = new JPEGCompressorNode(10, "PN", 30, true);
+    JPEGCompressorNode *cPN = new JPEGCompressorNode(10, "PN", 30, false);
 #ifdef __SEND_TO_LOCAL_HOST
     SocketOutputNode *cSN = new SocketOutputNode(10, "SN", "127.0.0.1", 8888);
 #else //__SEND_TO_LOCAL_HOST
